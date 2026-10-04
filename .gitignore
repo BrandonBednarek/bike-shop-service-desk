@@ -1,0 +1,20 @@
+# .NET build output and local IDE state. The web app's own ignores are in web/.gitignore.
+bin/
+obj/
+.vs/
+*.user
+TestResults/
+
+# Local data: the SQLite database and sign-in keys created when the API runs outside Docker,
+# and any database copied out of the Docker volume.
+.data/
+*.db*
+
+# Secrets
+.env
+.env.*
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
