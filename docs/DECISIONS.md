@@ -74,7 +74,7 @@ Customers don't use the app themselves, but it still helps them. Staff get a war
 - **Job statuses:** Checked in, In progress, Ready for pickup and Collected, plus On hold (waiting for parts or for the customer) and Cancelled. Collecting a bike records the POS receipt number.
 - **Work records:** labour time and parts used, a running bill, and a warning when the bill goes over the agreed amount.
 - **Linked jobs:** a new job can be linked to the same customer's earlier closed jobs, for example a comeback when our work needs redoing, or finishing work that was left undone.
-- **Closed jobs:** staff can't change collected or cancelled jobs. The owner can correct them but can't reopen them; a comeback becomes a new linked job.
+- **Closed jobs:** collecting a bike needs the POS receipt number and cancelling a job needs a reason, each confirmed in a dialog, so one stray click can't close a job. Staff can't change collected or cancelled jobs. The owner can correct them, or reopen one closed by mistake; a comeback still becomes a new linked job.
 - **Owner dashboard:** bikes in the shop, overdue jobs, jobs stuck on hold, bikes waiting to be picked up, and estimated vs actual hours.
 
 ### If there's time, in this order
