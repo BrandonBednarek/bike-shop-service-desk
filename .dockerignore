@@ -1,0 +1,12 @@
+# Keep host build output and dependencies out of the image build. They would bloat the
+# context and, worse, copy Windows-native binaries into a Linux build.
+**/node_modules
+**/bin
+**/obj
+**/.svelte-kit
+web/build
+
+# Not needed to build or run the app.
+.git
+.vs
+**/.data

@@ -1,0 +1,14 @@
+# Start the app with: docker compose up --build   (then open http://localhost:8080)
+# Reset all data with: docker compose down -v
+services:
+  app:
+    build: .
+    image: bike-shop-service-desk
+    ports:
+      # Override the host port if 8080 is taken, e.g. PORT=9090 docker compose up --build
+      - "${PORT:-8080}:8080"
+    volumes:
+      - bikeshop-data:/app/data
+
+volumes:
+  bikeshop-data:
