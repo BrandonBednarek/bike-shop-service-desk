@@ -136,7 +136,7 @@ Things I chose not to use: a repository layer on top of EF Core (its DbContext a
 - **The dashboard is calculated in memory.** Fine for hundreds of open jobs. With far more, the calculations would move into database queries.
 - **Jobs are linked by customer, not by bike.** There's no bike record yet, so if a bike changes owners its history doesn't follow it.
 - **Sign-in security is sized for one shop on its own network.**
-  - A deactivated user can't sign in again, but a session they already have open lasts until it expires, at most 12 hours after they signed in.
+  - A deactivated user can't sign in again, but a session they already have open lasts until it expires, at most 8 hours (a working day) after they signed in.
   - The keys that protect the sign-in cookie are stored unencrypted in the data folder, and ASP.NET Core warns about this at first start. Anyone who could read that folder could fake a sign-in, but the database is in the same folder, so they could already read everything.
   - There's no limit on sign-in attempts. That should be added before the app is ever on the internet.
 - **Going over the agreed amount shows a warning but doesn't block the job.** Blocking it would hold up the workshop, so the warning just tells staff to call the customer.
