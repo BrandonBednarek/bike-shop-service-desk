@@ -69,12 +69,12 @@ Customers don't use the app themselves, but it still helps them. Staff get a war
 ### Planned for the first version
 
 - **Sign-in with two roles:** Owner and Staff. The owner manages staff accounts.
-- **Check-in:** find a returning customer by phone or name, or add a new one. Record the bike, the work wanted, the estimate, the amount the customer agreed to and the promised date.
+- **Check-in:** find a returning customer by phone or name, or add a new one. Record the bike, the work wanted, the estimate and the promised date. The estimate is labour hours at the job's own hourly rate plus parts, and it's what the customer agrees to.
 - **Job board:** every bike in the shop by status, sorted by promised date, with search and an "assigned to me" filter.
 - **Job statuses:** Checked in, In progress, Ready for pickup and Collected, plus On hold (waiting for parts or for the customer) and Cancelled. Collecting a bike records the POS receipt number.
-- **Work records:** labour time and parts used, a running bill, and a warning when the bill goes over the agreed amount.
+- **Work records:** labour time and parts used, a running bill, and a warning when the bill goes over the estimate. If the customer agrees to more work, staff revise the estimate.
 - **Linked jobs:** a new job can be linked to the same customer's earlier closed jobs, for example a comeback when our work needs redoing, or finishing work that was left undone.
-- **Closed jobs:** staff can't change collected or cancelled jobs. The owner can correct them but can't reopen them; a comeback becomes a new linked job.
+- **Closed jobs:** collecting a bike needs the POS receipt number and cancelling a job needs a reason, each confirmed in a dialog, so one stray click can't close a job. Staff can't change collected or cancelled jobs. The owner can correct them, or reopen one closed by mistake; a comeback still becomes a new linked job.
 - **Owner dashboard:** bikes in the shop, overdue jobs, jobs stuck on hold, bikes waiting to be picked up, and estimated vs actual hours.
 
 ### If there's time, in this order
@@ -139,7 +139,7 @@ Things I chose not to use: a repository layer on top of EF Core (its DbContext a
   - A deactivated user can't sign in again, but a session they already have open lasts until it expires, at most 8 hours (a working day) after they signed in.
   - The keys that protect the sign-in cookie are stored unencrypted in the data folder, and ASP.NET Core warns about this at first start. Anyone who could read that folder could fake a sign-in, but the database is in the same folder, so they could already read everything.
   - There's no limit on sign-in attempts. That should be added before the app is ever on the internet.
-- **Going over the agreed amount shows a warning but doesn't block the job.** Blocking it would hold up the workshop, so the warning just tells staff to call the customer.
+- **Going over the estimate shows a warning when the part is added, but doesn't block it.** For something small, like a $3 cable, the mechanic can add it to the bill and carry on. For anything bigger, they put the job on hold and call the customer first. Blocking every overage would hold up the workshop for small parts.
 - **When the owner corrects a closed job, the POS sale isn't updated.** The till has to be adjusted separately.
 
 ## 6. Next steps *(to finalise)*
