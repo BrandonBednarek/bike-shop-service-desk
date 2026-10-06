@@ -2,6 +2,10 @@ namespace BikeShop.Api.Domain.WorkOrders;
 
 public sealed class WorkOrder
 {
+    private readonly List<LabourEntry> _labourEntries = [];
+
+    private readonly List<PartLine> _partLines = [];
+
     private WorkOrder()
     {
     }
@@ -24,7 +28,9 @@ public sealed class WorkOrder
 
     public long EstimatedPartsCents { get; private set; }
 
-    public long EstimateTotalCents => LabourChargeCents(EstimatedLabourMinutes) + EstimatedPartsCents;
+    public long EstimatedLabourCents => LabourChargeCents(EstimatedLabourMinutes);
+
+    public long EstimateTotalCents => EstimatedLabourCents + EstimatedPartsCents;
 
     public DateOnly PromisedOn { get; private set; }
 
@@ -44,23 +50,45 @@ public sealed class WorkOrder
 
     public string? CancellationReason { get; private set; }
 
-    public static WorkOrder CheckIn(WorkOrderIntake intake, int checkedInByUserId, DateTime utcNow) => new()
+    public IReadOnlyList<LabourEntry> LabourEntries => _labourEntries;
+
+    public IReadOnlyList<PartLine> PartLines => _partLines;
+
+    public int LoggedLabourMinutes => _labourEntries.Sum(entry => entry.Minutes);
+
+    public long PartsCents => _partLines.Sum(part => part.TotalCents);
+
+    public long BillCents => EstimatedLabourCents + PartsCents;
+
+    public bool IsOverEstimate => BillCents > EstimateTotalCents;
+
+    public static WorkOrder CheckIn(WorkOrderIntake intake, int checkedInByUserId, DateTime utcNow)
     {
-        CustomerId = intake.CustomerId,
-        BikeMakeModel = intake.BikeMakeModel,
-        BikeColour = intake.BikeColour,
-        JobType = intake.JobType,
-        WorkRequested = intake.WorkRequested,
-        EstimatedLabourMinutes = intake.EstimatedLabourMinutes,
-        LabourRateCentsPerHour = intake.LabourRateCentsPerHour,
-        EstimatedPartsCents = intake.EstimatedPartsCents,
-        PromisedOn = intake.PromisedOn,
-        AssignedToUserId = intake.AssignedToUserId,
-        Status = WorkOrderStatus.CheckedIn,
-        CheckedInByUserId = checkedInByUserId,
-        CheckedInAtUtc = utcNow,
-        StatusChangedAtUtc = utcNow,
-    };
+        WorkOrder workOrder = new()
+        {
+            Status = WorkOrderStatus.CheckedIn,
+            CheckedInByUserId = checkedInByUserId,
+            CheckedInAtUtc = utcNow,
+            StatusChangedAtUtc = utcNow,
+        };
+        workOrder.UpdateDetails(intake);
+        return workOrder;
+    }
+
+    // Used at check-in and later, for example to revise the estimate once the customer agrees to more work.
+    public void UpdateDetails(WorkOrderIntake intake)
+    {
+        CustomerId = intake.CustomerId;
+        BikeMakeModel = intake.BikeMakeModel;
+        BikeColour = intake.BikeColour;
+        JobType = intake.JobType;
+        WorkRequested = intake.WorkRequested;
+        EstimatedLabourMinutes = intake.EstimatedLabourMinutes;
+        LabourRateCentsPerHour = intake.LabourRateCentsPerHour;
+        EstimatedPartsCents = intake.EstimatedPartsCents;
+        PromisedOn = intake.PromisedOn;
+        AssignedToUserId = intake.AssignedToUserId;
+    }
 
     public void Start(int startedByUserId, DateTime utcNow)
     {
@@ -89,6 +117,12 @@ public sealed class WorkOrder
     }
 
     public void Reopen(DateTime utcNow) => ChangeStatus(StatusAfterReopening(), utcNow);
+
+    public void LogLabour(int mechanicUserId, int minutes, string? note, DateTime utcNow) =>
+        _labourEntries.Add(LabourEntry.Create(mechanicUserId, minutes, note, utcNow));
+
+    public void AddPart(string description, int quantity, long unitPriceCents, DateTime utcNow) =>
+        _partLines.Add(PartLine.Create(description, quantity, unitPriceCents, utcNow));
 
     private void ChangeStatus(WorkOrderStatus next, DateTime utcNow)
     {

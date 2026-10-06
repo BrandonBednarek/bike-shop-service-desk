@@ -139,7 +139,7 @@ Things I chose not to use: a repository layer on top of EF Core (its DbContext a
   - A deactivated user can't sign in again, but a session they already have open lasts until it expires, at most 8 hours (a working day) after they signed in.
   - The keys that protect the sign-in cookie are stored unencrypted in the data folder, and ASP.NET Core warns about this at first start. Anyone who could read that folder could fake a sign-in, but the database is in the same folder, so they could already read everything.
   - There's no limit on sign-in attempts. That should be added before the app is ever on the internet.
-- **Going over the agreed amount shows a warning but doesn't block the job.** Blocking it would hold up the workshop, so the warning just tells staff to call the customer.
+- **Going over the estimate shows a warning when the part is added, but doesn't block it.** For something small, like a $3 cable, the mechanic can add it to the bill and carry on. For anything bigger, they put the job on hold and call the customer first. Blocking every overage would hold up the workshop for small parts.
 - **When the owner corrects a closed job, the POS sale isn't updated.** The till has to be adjusted separately.
 
 ## 6. Next steps *(to finalise)*
