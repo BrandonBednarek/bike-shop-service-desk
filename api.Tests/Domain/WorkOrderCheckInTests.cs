@@ -16,13 +16,16 @@ public sealed class WorkOrderCheckInTests
         BikeColour: "Matte black",
         JobType: JobType.TuneUp,
         WorkRequested: "Gears skip on the big cog and the brakes squeal.",
+        EstimatedLabourMinutes: 75,
+        LabourRateCentsPerHour: 9_500,
+        EstimatedPartsCents: 4_200,
         PromisedOn: new DateOnly(2026, 10, 9),
         AssignedToUserId: 3);
 
     [Fact]
     public void CheckingInRecordsTheIntakeAndStartsAsCheckedIn()
     {
-        WorkOrder workOrder = WorkOrder.CheckIn(TuneUpIntake, CounterStaffUserId, CheckedInAtUtc);
+        WorkOrder workOrder = CheckIn(TuneUpIntake);
 
         workOrder.ShouldSatisfyAllConditions(
             () => workOrder.Status.ShouldBe(WorkOrderStatus.CheckedIn),
@@ -31,10 +34,29 @@ public sealed class WorkOrderCheckInTests
             () => workOrder.BikeColour.ShouldBe("Matte black"),
             () => workOrder.JobType.ShouldBe(JobType.TuneUp),
             () => workOrder.WorkRequested.ShouldBe("Gears skip on the big cog and the brakes squeal."),
+            () => workOrder.EstimatedLabourMinutes.ShouldBe(75),
+            () => workOrder.LabourRateCentsPerHour.ShouldBe(9_500),
+            () => workOrder.EstimatedPartsCents.ShouldBe(4_200),
             () => workOrder.PromisedOn.ShouldBe(new DateOnly(2026, 10, 9)),
             () => workOrder.AssignedToUserId.ShouldBe(3),
             () => workOrder.CheckedInByUserId.ShouldBe(CounterStaffUserId),
             () => workOrder.CheckedInAtUtc.ShouldBe(CheckedInAtUtc),
             () => workOrder.StatusChangedAtUtc.ShouldBe(CheckedInAtUtc));
     }
+
+    [Fact]
+    public void TheEstimateIsLabourAtTheJobsRatePlusPartsRoundedToTheCent()
+    {
+        // 45 minutes at $85.50 an hour is $64.125, so this also checks that half a cent rounds up.
+        WorkOrder workOrder = CheckIn(TuneUpIntake with
+        {
+            EstimatedLabourMinutes = 45,
+            LabourRateCentsPerHour = 8_550,
+            EstimatedPartsCents = 1_200,
+        });
+
+        workOrder.EstimateTotalCents.ShouldBe(7_613);
+    }
+
+    private static WorkOrder CheckIn(WorkOrderIntake intake) => WorkOrder.CheckIn(intake, CounterStaffUserId, CheckedInAtUtc);
 }

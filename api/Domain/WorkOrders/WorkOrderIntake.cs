@@ -6,5 +6,8 @@ public sealed record WorkOrderIntake(
     string BikeColour,
     JobType JobType,
     string WorkRequested,
+    int EstimatedLabourMinutes,
+    long LabourRateCentsPerHour,
+    long EstimatedPartsCents,
     DateOnly PromisedOn,
     int? AssignedToUserId);

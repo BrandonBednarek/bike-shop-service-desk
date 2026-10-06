@@ -18,6 +18,14 @@ public sealed class WorkOrder
 
     public string WorkRequested { get; private set; } = string.Empty;
 
+    public int EstimatedLabourMinutes { get; private set; }
+
+    public long LabourRateCentsPerHour { get; private set; }
+
+    public long EstimatedPartsCents { get; private set; }
+
+    public long EstimateTotalCents => LabourChargeCents(EstimatedLabourMinutes) + EstimatedPartsCents;
+
     public DateOnly PromisedOn { get; private set; }
 
     public int? AssignedToUserId { get; private set; }
@@ -37,6 +45,9 @@ public sealed class WorkOrder
         BikeColour = intake.BikeColour,
         JobType = intake.JobType,
         WorkRequested = intake.WorkRequested,
+        EstimatedLabourMinutes = intake.EstimatedLabourMinutes,
+        LabourRateCentsPerHour = intake.LabourRateCentsPerHour,
+        EstimatedPartsCents = intake.EstimatedPartsCents,
         PromisedOn = intake.PromisedOn,
         AssignedToUserId = intake.AssignedToUserId,
         Status = WorkOrderStatus.CheckedIn,
@@ -44,4 +55,7 @@ public sealed class WorkOrder
         CheckedInAtUtc = utcNow,
         StatusChangedAtUtc = utcNow,
     };
+
+    private long LabourChargeCents(int minutes) =>
+        (long)Math.Round(minutes * LabourRateCentsPerHour / 60m, MidpointRounding.AwayFromZero);
 }

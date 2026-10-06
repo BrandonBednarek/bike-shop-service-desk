@@ -69,10 +69,10 @@ Customers don't use the app themselves, but it still helps them. Staff get a war
 ### Planned for the first version
 
 - **Sign-in with two roles:** Owner and Staff. The owner manages staff accounts.
-- **Check-in:** find a returning customer by phone or name, or add a new one. Record the bike, the work wanted, the estimate, the amount the customer agreed to and the promised date.
+- **Check-in:** find a returning customer by phone or name, or add a new one. Record the bike, the work wanted, the estimate and the promised date. The estimate is labour hours at the job's own hourly rate plus parts, and it's what the customer agrees to.
 - **Job board:** every bike in the shop by status, sorted by promised date, with search and an "assigned to me" filter.
 - **Job statuses:** Checked in, In progress, Ready for pickup and Collected, plus On hold (waiting for parts or for the customer) and Cancelled. Collecting a bike records the POS receipt number.
-- **Work records:** labour time and parts used, a running bill, and a warning when the bill goes over the agreed amount.
+- **Work records:** labour time and parts used, a running bill, and a warning when the bill goes over the estimate. If the customer agrees to more work, staff revise the estimate.
 - **Linked jobs:** a new job can be linked to the same customer's earlier closed jobs, for example a comeback when our work needs redoing, or finishing work that was left undone.
 - **Closed jobs:** collecting a bike needs the POS receipt number and cancelling a job needs a reason, each confirmed in a dialog, so one stray click can't close a job. Staff can't change collected or cancelled jobs. The owner can correct them, or reopen one closed by mistake; a comeback still becomes a new linked job.
 - **Owner dashboard:** bikes in the shop, overdue jobs, jobs stuck on hold, bikes waiting to be picked up, and estimated vs actual hours.
