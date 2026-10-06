@@ -1,4 +1,5 @@
 using System.Net;
+using System.Net.Http.Json;
 
 using BikeShop.Api.Domain.WorkOrders;
 using BikeShop.Api.Features.WorkOrders;
@@ -41,6 +42,30 @@ public sealed class WorkOrderEndpointsTests(BikeShopApiFactory factory) : IClass
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         List<WorkOrderResponse> board = await response.ReadJsonAsync<List<WorkOrderResponse>>();
         board.ShouldContain(workOrder => workOrder.Id == checkedIn.Id);
+    }
+
+    [Fact]
+    public async Task EditingAJobRevisesItsEstimate()
+    {
+        HttpClient client = await factory.CreateSignedInClientAsync("lebis");
+        WorkOrderResponse job = await client.CheckInTuneUpAsync();
+
+        HttpResponseMessage response = await client.PutAsJsonAsync($"/api/work-orders/{job.Id}", new
+        {
+            customerId = job.CustomerId,
+            bikeMakeModel = job.BikeMakeModel,
+            bikeColour = job.BikeColour,
+            jobType = job.JobType.ToString(),
+            workRequested = job.WorkRequested,
+            estimatedLabourMinutes = 105,
+            labourRateCentsPerHour = job.LabourRateCentsPerHour,
+            estimatedPartsCents = 9_200,
+            promisedOn = job.PromisedOn,
+        });
+
+        response.StatusCode.ShouldBe(HttpStatusCode.OK);
+        WorkOrderResponse edited = await response.ReadJsonAsync<WorkOrderResponse>();
+        edited.EstimateTotalCents.ShouldBe(25_825);
     }
 
     [Fact]

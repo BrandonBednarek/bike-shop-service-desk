@@ -2,11 +2,12 @@ using System.Security.Claims;
 
 using BikeShop.Api.Domain.Customers;
 using BikeShop.Api.Domain.WorkOrders;
-using BikeShop.Api.Features.Auth;
 using BikeShop.Api.Infrastructure.Persistence;
 
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
+
+using static BikeShop.Api.Features.WorkOrders.WorkOrderEndpointSupport;
 
 namespace BikeShop.Api.Features.WorkOrders;
 
@@ -19,6 +20,7 @@ public static class WorkOrderEndpoints
         workOrders.MapPost("/", CheckInAsync);
         workOrders.MapGet("/", ListAsync);
         workOrders.MapGet("/{id:int}", GetAsync);
+        workOrders.MapPut("/{id:int}", UpdateDetailsAsync);
 
         return endpoints;
     }
@@ -34,7 +36,7 @@ public static class WorkOrderEndpoints
         if (customer is null)
             return UnknownCustomerProblem();
 
-        WorkOrder workOrder = WorkOrder.CheckIn(ToIntake(request), SessionClaims.ReadCurrentUser(user).Id, clock.GetUtcNow().UtcDateTime);
+        WorkOrder workOrder = WorkOrder.CheckIn(ToIntake(request), CurrentUserId(user), Now(clock));
         dbContext.WorkOrders.Add(workOrder);
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -62,9 +64,19 @@ public static class WorkOrderEndpoints
     {
         WorkOrder? workOrder = await dbContext.WorkOrders.FindAsync([id], cancellationToken);
         return workOrder is null
-            ? WorkOrderResults.UnknownJob()
-            : await WorkOrderResults.OkAsync(workOrder, dbContext, cancellationToken);
+            ? UnknownJob()
+            : await OkAsync(workOrder, dbContext, cancellationToken);
     }
+
+    private static async Task<Results<Ok<WorkOrderResponse>, ProblemHttpResult>> UpdateDetailsAsync(
+        int id,
+        WorkOrderDetailsRequest request,
+        ClaimsPrincipal user,
+        AppDbContext dbContext,
+        CancellationToken cancellationToken) =>
+        await dbContext.Customers.AnyAsync(customer => customer.Id == request.CustomerId, cancellationToken)
+            ? await ApplyAsync(id, user, dbContext, workOrder => workOrder.UpdateDetails(ToIntake(request)), cancellationToken)
+            : UnknownCustomerProblem();
 
     // With no status, the board shows every open job: anything not yet collected or cancelled.
     private static IQueryable<WorkOrder> WithStatus(IQueryable<WorkOrder> workOrders, WorkOrderStatus? status) =>

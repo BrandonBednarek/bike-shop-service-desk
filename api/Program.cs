@@ -42,6 +42,7 @@ app.MapCustomerEndpoints();
 app.MapUserEndpoints();
 app.MapWorkOrderEndpoints();
 app.MapWorkOrderStatusEndpoints();
+app.MapWorkOrderLineEndpoints();
 app.MapApiNotFoundFallback();
 
 // Single-page app: any other address that isn't a file gets the front end's page.
