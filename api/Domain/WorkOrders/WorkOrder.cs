@@ -6,6 +6,8 @@ public sealed class WorkOrder
 
     private readonly List<PartLine> _partLines = [];
 
+    private readonly List<JobNote> _notes = [];
+
     private WorkOrder()
     {
     }
@@ -53,6 +55,8 @@ public sealed class WorkOrder
     public IReadOnlyList<LabourEntry> LabourEntries => _labourEntries;
 
     public IReadOnlyList<PartLine> PartLines => _partLines;
+
+    public IReadOnlyList<JobNote> Notes => _notes;
 
     public int LoggedLabourMinutes => _labourEntries.Sum(entry => entry.Minutes);
 
@@ -123,6 +127,9 @@ public sealed class WorkOrder
 
     public void AddPart(string description, int quantity, long unitPriceCents, DateTime utcNow) =>
         _partLines.Add(PartLine.Create(description, quantity, unitPriceCents, utcNow));
+
+    public void AddNote(string text, int writtenByUserId, DateTime utcNow) =>
+        _notes.Add(JobNote.Create(text, writtenByUserId, utcNow));
 
     private void ChangeStatus(WorkOrderStatus next, DateTime utcNow)
     {

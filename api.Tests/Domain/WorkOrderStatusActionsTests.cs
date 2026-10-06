@@ -65,6 +65,23 @@ public sealed class WorkOrderStatusActionsTests
             () => workOrder.CancellationReason.ShouldBeNull());
     }
 
+    [Fact]
+    public void NotesAreKeptWhenTheStatusChanges()
+    {
+        WorkOrder workOrder = CheckInUnassignedTuneUp();
+
+        workOrder.AddNote("Waiting for a Shimano 11-speed cassette, due Thursday.", MechanicUserId, LaterUtc);
+        workOrder.Hold(HoldReason.WaitingForParts, LaterUtc);
+        workOrder.Start(MechanicUserId, LaterUtc);
+        workOrder.AddNote("Customer called; picking up Friday.", CounterStaffUserId, LaterUtc);
+
+        workOrder.Notes.Select(note => note.Text).ShouldBe(
+        [
+            "Waiting for a Shimano 11-speed cassette, due Thursday.",
+            "Customer called; picking up Friday.",
+        ]);
+    }
+
     private static WorkOrder CheckInUnassignedTuneUp() => WorkOrder.CheckIn(
         new WorkOrderIntake(
             CustomerId: 7,
