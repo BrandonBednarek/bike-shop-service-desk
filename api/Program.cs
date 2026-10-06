@@ -1,6 +1,9 @@
 using System.Text.Json.Serialization;
 
 using BikeShop.Api.Features.Auth;
+using BikeShop.Api.Features.Customers;
+using BikeShop.Api.Features.Users;
+using BikeShop.Api.Features.WorkOrders;
 using BikeShop.Api.Infrastructure.Errors;
 using BikeShop.Api.Infrastructure.Persistence;
 using BikeShop.Api.Infrastructure.Security;
@@ -19,6 +22,7 @@ builder.Services.AddPersistence(dataDirectory);
 builder.Services.AddPasswordHashing();
 builder.Services.AddCookieSignIn(dataDirectory);
 builder.Services.AddDemoSeeding();
+builder.Services.AddSingleton(TimeProvider.System);
 
 WebApplication app = builder.Build();
 
@@ -34,6 +38,11 @@ app.UseAuthorization();
 
 // Endpoints
 app.MapAuthEndpoints();
+app.MapCustomerEndpoints();
+app.MapUserEndpoints();
+app.MapWorkOrderEndpoints();
+app.MapWorkOrderStatusEndpoints();
+app.MapWorkOrderLineEndpoints();
 app.MapApiNotFoundFallback();
 
 // Single-page app: any other address that isn't a file gets the front end's page.

@@ -3,20 +3,14 @@ using BikeShop.Api.Domain.WorkOrders;
 
 using Shouldly;
 
+using static BikeShop.Api.Tests.Domain.TuneUpJob;
+
 namespace BikeShop.Api.Tests.Domain;
 
 public sealed class WorkOrderStatusActionsTests
 {
-    private const int CounterStaffUserId = 2;
-
-    private const int MechanicUserId = 3;
-
-    private static readonly DateTime CheckedInAtUtc = new(2026, 10, 5, 14, 30, 0, DateTimeKind.Utc);
-
-    private static readonly DateTime LaterUtc = new(2026, 10, 6, 9, 0, 0, DateTimeKind.Utc);
-
     [Fact]
-    public void AMoveTheLifecycleDoesNotAllowIsRefused()
+    public void CollectingAJobThatIsNotReadyIsRefused()
     {
         WorkOrder workOrder = CheckInUnassignedTuneUp();
 
@@ -82,18 +76,5 @@ public sealed class WorkOrderStatusActionsTests
         ]);
     }
 
-    private static WorkOrder CheckInUnassignedTuneUp() => WorkOrder.CheckIn(
-        new WorkOrderIntake(
-            CustomerId: 7,
-            BikeMakeModel: "Trek FX 2",
-            BikeColour: "Matte black",
-            JobType: JobType.TuneUp,
-            WorkRequested: "Annual tune-up.",
-            EstimatedLabourMinutes: 75,
-            LabourRateCentsPerHour: 9_500,
-            EstimatedPartsCents: 0,
-            PromisedOn: new DateOnly(2026, 10, 9),
-            AssignedToUserId: null),
-        CounterStaffUserId,
-        CheckedInAtUtc);
+    private static WorkOrder CheckInUnassignedTuneUp() => CheckIn(Intake with { AssignedToUserId = null });
 }

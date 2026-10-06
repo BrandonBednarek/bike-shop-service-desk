@@ -40,6 +40,8 @@ public sealed class WorkOrder
 
     public WorkOrderStatus Status { get; private set; }
 
+    public bool IsClosed => Status is WorkOrderStatus.Collected or WorkOrderStatus.Cancelled;
+
     public int CheckedInByUserId { get; private set; }
 
     public DateTime CheckedInAtUtc { get; private set; }
@@ -130,6 +132,18 @@ public sealed class WorkOrder
 
     public void AddNote(string text, int writtenByUserId, DateTime utcNow) =>
         _notes.Add(JobNote.Create(text, writtenByUserId, utcNow));
+
+    public void RemoveLabour(int labourEntryId)
+    {
+        if (_labourEntries.RemoveAll(entry => entry.Id == labourEntryId) == 0)
+            throw new BusinessRuleException("This job has no labour entry with that ID.");
+    }
+
+    public void RemovePart(int partLineId)
+    {
+        if (_partLines.RemoveAll(part => part.Id == partLineId) == 0)
+            throw new BusinessRuleException("This job has no part with that ID.");
+    }
 
     private void ChangeStatus(WorkOrderStatus next, DateTime utcNow)
     {

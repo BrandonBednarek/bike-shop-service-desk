@@ -5,6 +5,7 @@ public static class ErrorHandlingExtensions
     public static IServiceCollection AddProblemDetailsErrors(this IServiceCollection services)
     {
         services.AddProblemDetails();
+        services.AddExceptionHandler<BusinessRuleExceptionHandler>();
         services.AddValidation();
 
         // Development defaults this to true, which turns an unreadable request body into an
