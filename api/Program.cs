@@ -1,6 +1,8 @@
 using System.Text.Json.Serialization;
 
 using BikeShop.Api.Features.Auth;
+using BikeShop.Api.Features.Customers;
+using BikeShop.Api.Features.Users;
 using BikeShop.Api.Infrastructure.Errors;
 using BikeShop.Api.Infrastructure.Persistence;
 using BikeShop.Api.Infrastructure.Security;
@@ -34,6 +36,8 @@ app.UseAuthorization();
 
 // Endpoints
 app.MapAuthEndpoints();
+app.MapCustomerEndpoints();
+app.MapUserEndpoints();
 app.MapApiNotFoundFallback();
 
 // Single-page app: any other address that isn't a file gets the front end's page.
