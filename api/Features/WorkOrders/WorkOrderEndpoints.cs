@@ -61,11 +61,9 @@ public static class WorkOrderEndpoints
         CancellationToken cancellationToken)
     {
         WorkOrder? workOrder = await dbContext.WorkOrders.FindAsync([id], cancellationToken);
-        if (workOrder is null)
-            return UnknownJobProblem();
-
-        Customer customer = await dbContext.Customers.SingleAsync(candidate => candidate.Id == workOrder.CustomerId, cancellationToken);
-        return TypedResults.Ok(WorkOrderResponse.From(workOrder, customer));
+        return workOrder is null
+            ? WorkOrderResults.UnknownJob()
+            : await WorkOrderResults.OkAsync(workOrder, dbContext, cancellationToken);
     }
 
     // With no status, the board shows every open job: anything not yet collected or cancelled.
@@ -100,8 +98,4 @@ public static class WorkOrderEndpoints
     private static ProblemHttpResult UnknownCustomerProblem() => TypedResults.Problem(
         statusCode: StatusCodes.Status422UnprocessableEntity,
         title: "There's no customer with that ID.");
-
-    private static ProblemHttpResult UnknownJobProblem() => TypedResults.Problem(
-        statusCode: StatusCodes.Status404NotFound,
-        title: "There's no job with that number.");
 }
