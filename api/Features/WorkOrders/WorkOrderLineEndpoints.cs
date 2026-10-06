@@ -27,7 +27,7 @@ public static class WorkOrderLineEndpoints
     private static Task<Results<Ok<WorkOrderResponse>, ProblemHttpResult>> LogLabourAsync(
         int id, LogLabourRequest request, ClaimsPrincipal user, AppDbContext dbContext, TimeProvider clock, CancellationToken cancellationToken) =>
         ApplyAsync(id, user, dbContext, workOrder => workOrder.LogLabour(
-            request.MechanicUserId ?? CurrentUserId(user), request.Minutes!.Value, request.Note, Now(clock)), cancellationToken);
+            request.MechanicUserId ?? CurrentUserId(user), request.Minutes!.Value, request.Note, UtcNow(clock)), cancellationToken);
 
     private static Task<Results<Ok<WorkOrderResponse>, ProblemHttpResult>> RemoveLabourAsync(
         int id, int entryId, ClaimsPrincipal user, AppDbContext dbContext, CancellationToken cancellationToken) =>
@@ -36,7 +36,7 @@ public static class WorkOrderLineEndpoints
     private static Task<Results<Ok<WorkOrderResponse>, ProblemHttpResult>> AddPartAsync(
         int id, AddPartRequest request, ClaimsPrincipal user, AppDbContext dbContext, TimeProvider clock, CancellationToken cancellationToken) =>
         ApplyAsync(id, user, dbContext, workOrder => workOrder.AddPart(
-            request.Description, request.Quantity!.Value, request.UnitPriceCents!.Value, Now(clock)), cancellationToken);
+            request.Description, request.Quantity!.Value, request.UnitPriceCents!.Value, UtcNow(clock)), cancellationToken);
 
     private static Task<Results<Ok<WorkOrderResponse>, ProblemHttpResult>> RemovePartAsync(
         int id, int partId, ClaimsPrincipal user, AppDbContext dbContext, CancellationToken cancellationToken) =>
@@ -44,5 +44,5 @@ public static class WorkOrderLineEndpoints
 
     private static Task<Results<Ok<WorkOrderResponse>, ProblemHttpResult>> AddNoteAsync(
         int id, AddNoteRequest request, ClaimsPrincipal user, AppDbContext dbContext, TimeProvider clock, CancellationToken cancellationToken) =>
-        ApplyAsync(id, user, dbContext, workOrder => workOrder.AddNote(request.Text, CurrentUserId(user), Now(clock)), cancellationToken);
+        ApplyAsync(id, user, dbContext, workOrder => workOrder.AddNote(request.Text, CurrentUserId(user), UtcNow(clock)), cancellationToken);
 }

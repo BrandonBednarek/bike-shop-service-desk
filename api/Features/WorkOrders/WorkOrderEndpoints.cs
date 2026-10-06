@@ -36,7 +36,7 @@ public static class WorkOrderEndpoints
         if (customer is null)
             return UnknownCustomerProblem();
 
-        WorkOrder workOrder = WorkOrder.CheckIn(ToIntake(request), CurrentUserId(user), Now(clock));
+        WorkOrder workOrder = WorkOrder.CheckIn(ToIntake(request), CurrentUserId(user), UtcNow(clock));
         dbContext.WorkOrders.Add(workOrder);
         await dbContext.SaveChangesAsync(cancellationToken);
 
@@ -64,7 +64,7 @@ public static class WorkOrderEndpoints
     {
         WorkOrder? workOrder = await dbContext.WorkOrders.FindAsync([id], cancellationToken);
         return workOrder is null
-            ? UnknownJob()
+            ? UnknownJobProblem()
             : await OkAsync(workOrder, dbContext, cancellationToken);
     }
 
