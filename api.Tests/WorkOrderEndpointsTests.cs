@@ -14,7 +14,7 @@ namespace BikeShop.Api.Tests;
 public sealed class WorkOrderEndpointsTests(BikeShopApiFactory factory) : IClassFixture<BikeShopApiFactory>
 {
     [Fact]
-    public async Task ACheckedInJobCanBeFetchedByItsJobNumber()
+    public async Task AFetchedJobIsNumberedFrom1001WithUtcTimes()
     {
         HttpClient client = await factory.CreateSignedInClientAsync("lebis");
         WorkOrderResponse checkedIn = await client.CheckInTuneUpAsync();

@@ -10,6 +10,7 @@ namespace BikeShop.Api.Tests.TestSupport;
 
 public static class WorkOrderApiExtensions
 {
+    // 75 minutes at $95 an hour is $118.75 of labour, plus $42 of parts: a $160.75 estimate.
     public static async Task<WorkOrderResponse> CheckInTuneUpAsync(this HttpClient client)
     {
         HttpResponseMessage customerResponse = await client.PostAsJsonAsync("/api/customers", new { name = "Henry Fonda", phone = "(416) 123-4567" });
@@ -30,6 +31,9 @@ public static class WorkOrderApiExtensions
         response.StatusCode.ShouldBe(HttpStatusCode.OK);
         return await response.ReadJsonAsync<WorkOrderResponse>();
     }
+
+    public static async Task ShouldSucceedAsync(this Task<HttpResponseMessage> request) =>
+        (await request).StatusCode.ShouldBe(HttpStatusCode.OK);
 
     public static Task<HttpResponseMessage> PostActionAsync(this HttpClient client, int workOrderId, string action) =>
         client.PostAsync($"/api/work-orders/{workOrderId}/{action}", content: null);

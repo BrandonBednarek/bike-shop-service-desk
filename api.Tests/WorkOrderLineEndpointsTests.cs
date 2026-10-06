@@ -16,8 +16,8 @@ public sealed class WorkOrderLineEndpointsTests(BikeShopApiFactory factory) : IC
         HttpClient client = await factory.CreateSignedInClientAsync("lebis");
         WorkOrderResponse job = await client.CheckInTuneUpAsync();
 
-        await client.PostAsJsonAsync($"/api/work-orders/{job.Id}/labour", new { minutes = 120, note = "Seized derailleur bolt." });
-        await client.PostAsJsonAsync($"/api/work-orders/{job.Id}/parts", new { description = "Brake pads", quantity = 2, unitPriceCents = 1_500 });
+        await client.PostAsJsonAsync($"/api/work-orders/{job.Id}/labour", new { minutes = 120, note = "Seized derailleur bolt." }).ShouldSucceedAsync();
+        await client.PostAsJsonAsync($"/api/work-orders/{job.Id}/parts", new { description = "Brake pads", quantity = 2, unitPriceCents = 1_500 }).ShouldSucceedAsync();
         HttpResponseMessage response = await client.PostAsJsonAsync($"/api/work-orders/{job.Id}/notes", new { text = "Customer called; picking up Friday." });
 
         WorkOrderResponse updated = await response.ReadJsonAsync<WorkOrderResponse>();
@@ -35,12 +35,12 @@ public sealed class WorkOrderLineEndpointsTests(BikeShopApiFactory factory) : IC
         HttpResponseMessage added = await client.PostAsJsonAsync($"/api/work-orders/{job.Id}/parts", new { description = "Chain", quantity = 1, unitPriceCents = 5_000 });
         int partId = (await added.ReadJsonAsync<WorkOrderResponse>()).PartLines.Single().Id;
 
-        HttpResponseMessage response = await client.DeleteAsync($"/api/work-orders/{job.Id}/parts/{partId}");
+        await client.DeleteAsync($"/api/work-orders/{job.Id}/parts/{partId}").ShouldSucceedAsync();
 
-        WorkOrderResponse updated = await response.ReadJsonAsync<WorkOrderResponse>();
-        updated.ShouldSatisfyAllConditions(
-            () => updated.PartLines.ShouldBeEmpty(),
-            () => updated.BillCents.ShouldBe(11_875));
+        WorkOrderResponse reloaded = await (await client.GetAsync($"/api/work-orders/{job.Id}")).ReadJsonAsync<WorkOrderResponse>();
+        reloaded.ShouldSatisfyAllConditions(
+            () => reloaded.PartLines.ShouldBeEmpty(),
+            () => reloaded.BillCents.ShouldBe(11_875));
     }
 
     [Fact]
@@ -49,7 +49,7 @@ public sealed class WorkOrderLineEndpointsTests(BikeShopApiFactory factory) : IC
         HttpClient staff = await factory.CreateSignedInClientAsync("lebis");
         HttpClient owner = await factory.CreateSignedInClientAsync("owner");
         WorkOrderResponse job = await staff.CheckInTuneUpAsync();
-        (await staff.PostActionAsync(job.Id, "cancel", new { reason = "Customer took the bike home." })).StatusCode.ShouldBe(HttpStatusCode.OK);
+        await staff.PostActionAsync(job.Id, "cancel", new { reason = "Customer took the bike home." }).ShouldSucceedAsync();
         object part = new { description = "Brake pads", quantity = 2, unitPriceCents = 1_500 };
 
         HttpResponseMessage byStaff = await staff.PostAsJsonAsync($"/api/work-orders/{job.Id}/parts", part);

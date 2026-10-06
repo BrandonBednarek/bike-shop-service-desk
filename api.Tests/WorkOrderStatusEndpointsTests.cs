@@ -16,10 +16,10 @@ public sealed class WorkOrderStatusEndpointsTests(BikeShopApiFactory factory) : 
         HttpClient client = await factory.CreateSignedInClientAsync("lebis");
         WorkOrderResponse job = await client.CheckInTuneUpAsync();
 
-        await ShouldSucceedAsync(client.PostActionAsync(job.Id, "start"));
-        await ShouldSucceedAsync(client.PostActionAsync(job.Id, "hold", new { reason = "WaitingForParts", note = "Cassette due Thursday." }));
-        await ShouldSucceedAsync(client.PostActionAsync(job.Id, "start"));
-        await ShouldSucceedAsync(client.PostActionAsync(job.Id, "mark-ready"));
+        await client.PostActionAsync(job.Id, "start").ShouldSucceedAsync();
+        await client.PostActionAsync(job.Id, "hold", new { reason = "WaitingForParts", note = "Cassette due Thursday." }).ShouldSucceedAsync();
+        await client.PostActionAsync(job.Id, "start").ShouldSucceedAsync();
+        await client.PostActionAsync(job.Id, "mark-ready").ShouldSucceedAsync();
         HttpResponseMessage collected = await client.PostActionAsync(job.Id, "collect", new { posReceiptNumber = "R-1042" });
 
         WorkOrderResponse final = await collected.ReadJsonAsync<WorkOrderResponse>();
@@ -30,7 +30,7 @@ public sealed class WorkOrderStatusEndpointsTests(BikeShopApiFactory factory) : 
     }
 
     [Fact]
-    public async Task AMoveTheLifecycleDoesNotAllowIsUnprocessable()
+    public async Task CollectingAJobThatIsNotReadyIsUnprocessable()
     {
         HttpClient client = await factory.CreateSignedInClientAsync("lebis");
         WorkOrderResponse job = await client.CheckInTuneUpAsync();
@@ -47,7 +47,7 @@ public sealed class WorkOrderStatusEndpointsTests(BikeShopApiFactory factory) : 
         HttpClient staff = await factory.CreateSignedInClientAsync("lebis");
         HttpClient owner = await factory.CreateSignedInClientAsync("owner");
         WorkOrderResponse job = await staff.CheckInTuneUpAsync();
-        await ShouldSucceedAsync(staff.PostActionAsync(job.Id, "cancel", new { reason = "Customer took the bike home." }));
+        await staff.PostActionAsync(job.Id, "cancel", new { reason = "Customer took the bike home." }).ShouldSucceedAsync();
 
         HttpResponseMessage byStaff = await staff.PostActionAsync(job.Id, "reopen");
         HttpResponseMessage byOwner = await owner.PostActionAsync(job.Id, "reopen");
@@ -56,7 +56,4 @@ public sealed class WorkOrderStatusEndpointsTests(BikeShopApiFactory factory) : 
         byOwner.StatusCode.ShouldBe(HttpStatusCode.OK);
         (await byOwner.ReadJsonAsync<WorkOrderResponse>()).Status.ShouldBe(WorkOrderStatus.CheckedIn);
     }
-
-    private static async Task ShouldSucceedAsync(Task<HttpResponseMessage> request) =>
-        (await request).StatusCode.ShouldBe(HttpStatusCode.OK);
 }
