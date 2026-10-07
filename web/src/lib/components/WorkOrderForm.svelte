@@ -1,8 +1,8 @@
 <!--
 	The job's details: the bike, the work wanted, the estimate, the promised date and who it's
-	assigned to. Check-in uses it now, and the job page will reuse it to edit a job. Staff type
-	hours and dollars, which become the minutes and cents the API stores as they type. Saving
-	hands the details to the page through onsave.
+	assigned to. Check-in uses it empty, and the edit page fills it in from the job (initial).
+	Staff type hours and dollars, which become the minutes and cents the API stores as they
+	type. Saving hands the details to the page through onsave.
 -->
 <script lang="ts">
 	import { describeFailure } from '#lib/api/api-error.js';
@@ -15,36 +15,47 @@
 		// null until a customer is chosen; the save button stays disabled until then.
 		customerId: number | null;
 		users: User[];
+		initial?: WorkOrderDetails;
 		submitLabel: string;
 		onsave: (details: WorkOrderDetails) => Promise<void>;
 	}
 
-	let { customerId, users, submitLabel, onsave }: Props = $props();
+	let { customerId, users, initial, submitLabel, onsave }: Props = $props();
 
 	const defaultLabourRateDollars = 95;
 	const jobTypes = Object.keys(jobTypeLabels) as JobType[];
 	const today = todayAsIsoDate();
 
-	// One $state per input, kept in step with it through bind:value. Number inputs give null
+	// What's in each input, kept in step with it through bind:value. Number inputs give null
 	// while they're empty.
-	let bikeMakeModel = $state('');
-	let bikeColour = $state('');
-	let jobType = $state<JobType | ''>('');
-	let workRequested = $state('');
-	let labourHours = $state<number | null>(null);
-	let labourRateDollars = $state<number | null>(defaultLabourRateDollars);
-	let partsDollars = $state<number | null>(null);
-	let promisedOn = $state('');
-	let assignedToUserId = $state<number | null>(null);
+	interface FormValues {
+		bikeMakeModel: string;
+		bikeColour: string;
+		jobType: JobType | '';
+		workRequested: string;
+		labourHours: number | null;
+		labourRateDollars: number | null;
+		partsDollars: number | null;
+		promisedOn: string;
+		assignedToUserId: number | null;
+	}
+
+	// The inputs take their starting values from initial once, here, so what staff type isn't
+	// replaced if the job reloads meanwhile.
+	let values = $state(startingValues());
 
 	let errorMessage = $state('');
 	let saving = $state(false);
 
-	let activeUsers = $derived(users.filter((user) => user.isActive));
+	// Only active staff can be given a job, but a job already assigned to someone who has since
+	// left keeps showing their name.
+	let assignableUsers = $derived(
+		users.filter((user) => user.isActive || user.id === initial?.assignedToUserId)
+	);
 
-	let estimatedLabourMinutes = $derived(Math.round((labourHours ?? 0) * 60));
-	let labourRateCentsPerHour = $derived(toCents(labourRateDollars ?? 0));
-	let estimatedPartsCents = $derived(toCents(partsDollars ?? 0));
+	let estimatedLabourMinutes = $derived(Math.round((values.labourHours ?? 0) * 60));
+	let labourRateCentsPerHour = $derived(toCents(values.labourRateDollars ?? 0));
+	let estimatedPartsCents = $derived(toCents(values.partsDollars ?? 0));
 
 	// The estimate updates as staff type, so they can tell the customer the price. It rounds the
 	// same way as the API, so it matches the estimate the job is saved with.
@@ -52,11 +63,38 @@
 		Math.round((estimatedLabourMinutes * labourRateCentsPerHour) / 60)
 	);
 
+	function startingValues(): FormValues {
+		if (!initial) {
+			return {
+				bikeMakeModel: '',
+				bikeColour: '',
+				jobType: '',
+				workRequested: '',
+				labourHours: null,
+				labourRateDollars: defaultLabourRateDollars,
+				partsDollars: null,
+				promisedOn: '',
+				assignedToUserId: null
+			};
+		}
+		return {
+			bikeMakeModel: initial.bikeMakeModel,
+			bikeColour: initial.bikeColour,
+			jobType: initial.jobType,
+			workRequested: initial.workRequested,
+			labourHours: initial.estimatedLabourMinutes / 60,
+			labourRateDollars: initial.labourRateCentsPerHour / 100,
+			partsDollars: initial.estimatedPartsCents / 100,
+			promisedOn: initial.promisedOn,
+			assignedToUserId: initial.assignedToUserId
+		};
+	}
+
 	async function handleSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		// The disabled button and the required job type rule these out already; this just tells
 		// TypeScript the values are set.
-		if (customerId === null || jobType === '') {
+		if (customerId === null || values.jobType === '') {
 			return;
 		}
 		saving = true;
@@ -64,15 +102,15 @@
 		try {
 			await onsave({
 				customerId,
-				bikeMakeModel: bikeMakeModel.trim(),
-				bikeColour: bikeColour.trim(),
-				jobType,
-				workRequested: workRequested.trim(),
+				bikeMakeModel: values.bikeMakeModel.trim(),
+				bikeColour: values.bikeColour.trim(),
+				jobType: values.jobType,
+				workRequested: values.workRequested.trim(),
 				estimatedLabourMinutes,
 				labourRateCentsPerHour,
 				estimatedPartsCents,
-				promisedOn,
-				assignedToUserId
+				promisedOn: values.promisedOn,
+				assignedToUserId: values.assignedToUserId
 			});
 		} catch (error) {
 			errorMessage = describeFailure(error);
@@ -86,7 +124,7 @@
 	<label class="block text-sm font-medium text-slate-700">
 		Bike make and model
 		<input
-			bind:value={bikeMakeModel}
+			bind:value={values.bikeMakeModel}
 			required
 			maxlength="100"
 			placeholder="Trek FX 2"
@@ -97,7 +135,7 @@
 	<label class="block text-sm font-medium text-slate-700">
 		Colour
 		<input
-			bind:value={bikeColour}
+			bind:value={values.bikeColour}
 			required
 			maxlength="50"
 			class="mt-1 block w-full rounded-md border-slate-300 text-sm"
@@ -107,7 +145,7 @@
 	<label class="block text-sm font-medium text-slate-700">
 		Main job type
 		<select
-			bind:value={jobType}
+			bind:value={values.jobType}
 			required
 			class="mt-1 block w-full rounded-md border-slate-300 text-sm"
 		>
@@ -122,11 +160,11 @@
 		Assign to
 		<!-- Option values can be numbers or null, not just text; bind:value gives back the same value. -->
 		<select
-			bind:value={assignedToUserId}
+			bind:value={values.assignedToUserId}
 			class="mt-1 block w-full rounded-md border-slate-300 text-sm"
 		>
 			<option value={null}>Unassigned</option>
-			{#each activeUsers as user (user.id)}
+			{#each assignableUsers as user (user.id)}
 				<option value={user.id}>{user.displayName}</option>
 			{/each}
 		</select>
@@ -135,7 +173,7 @@
 	<label class="col-span-2 block text-sm font-medium text-slate-700">
 		Work requested, in the customer's words
 		<textarea
-			bind:value={workRequested}
+			bind:value={values.workRequested}
 			required
 			maxlength="2000"
 			rows="3"
@@ -147,7 +185,7 @@
 			Labour hours
 			<input
 				type="number"
-				bind:value={labourHours}
+				bind:value={values.labourHours}
 				required
 				min="0"
 				max="100"
@@ -160,7 +198,7 @@
 			Rate per hour ($)
 			<input
 				type="number"
-				bind:value={labourRateDollars}
+				bind:value={values.labourRateDollars}
 				required
 				min="0"
 				max="1000"
@@ -173,7 +211,7 @@
 			Parts ($)
 			<input
 				type="number"
-				bind:value={partsDollars}
+				bind:value={values.partsDollars}
 				required
 				min="0"
 				max="100000"
@@ -182,13 +220,15 @@
 			/>
 		</label>
 
+		<!-- A new job can't be promised for a day that has gone, but an existing job keeps its date,
+			even once it's overdue. -->
 		<label class="block text-sm font-medium text-slate-700">
 			Promised for
 			<input
 				type="date"
-				bind:value={promisedOn}
+				bind:value={values.promisedOn}
 				required
-				min={today}
+				min={initial ? undefined : today}
 				max="9999-12-31"
 				class="mt-1 block w-full rounded-md border-slate-300 text-sm"
 			/>

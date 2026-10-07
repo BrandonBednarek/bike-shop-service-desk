@@ -1,8 +1,8 @@
 <!--
-	A job's page, at /work-orders/1001. +page.ts loads the job and the staff list before the page
-	is drawn. It shows the job's details with buttons to change its status (StatusActions), the
-	estimate against the bill, and the labour, parts and notes recorded on it. An unknown job
-	number goes to the error page instead.
+	A job's page, at /work-orders/1001. The folder's +layout.ts loads the job and the staff list
+	before the page is drawn. It shows the job's details, an Edit details link, buttons to
+	change its status (StatusActions), the estimate against the bill, and the labour, parts and
+	notes recorded on it. An unknown job number goes to the error page instead.
 -->
 <script lang="ts">
 	import Badge from '#lib/components/Badge.svelte';
@@ -11,7 +11,7 @@
 	import { displayNameOf } from '#lib/user-names.js';
 	import { holdReasonLabels, jobTypeLabels, statusLabels } from '#lib/work-orders/labels.js';
 	import { isOverdue } from '#lib/work-orders/overdue.js';
-	import { isClosed } from '#lib/work-orders/status.js';
+	import { canChange, isClosed } from '#lib/work-orders/status.js';
 	import LabourSection from './LabourSection.svelte';
 	import NotesSection from './NotesSection.svelte';
 	import PartsSection from './PartsSection.svelte';
@@ -50,10 +50,18 @@
 	<span class="rounded-full bg-slate-200 px-3 py-1 text-sm font-medium text-slate-800">
 		{statusLabels[workOrder.status]}
 	</span>
+	{#if canChange(workOrder, data.currentUser)}
+		<a
+			href="/work-orders/{workOrder.id}/edit"
+			class="ml-auto rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-100"
+		>
+			Edit details
+		</a>
+	{/if}
 </div>
 <p class="mt-1 text-slate-600">{workOrder.customerName} · {workOrder.customerPhone}</p>
 
-<StatusActions {workOrder} isOwner={data.currentUser.role === 'Owner'} />
+<StatusActions {workOrder} currentUser={data.currentUser} />
 
 <dl
 	class="mt-6 grid grid-cols-3 gap-x-8 gap-y-4 rounded-lg border border-slate-200 bg-white p-6 text-sm"

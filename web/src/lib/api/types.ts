@@ -48,7 +48,7 @@ export type JobType =
 
 export type HoldReason = 'WaitingForParts' | 'WaitingForCustomer';
 
-/** What staff fill in when they check a bike in. Money is in cents. */
+/** The job details staff fill in at check-in and on the edit page. Money is in cents. */
 export interface WorkOrderDetails {
 	customerId: number;
 	bikeMakeModel: string;

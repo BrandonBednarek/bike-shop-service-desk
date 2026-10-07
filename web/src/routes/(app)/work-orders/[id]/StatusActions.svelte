@@ -10,7 +10,7 @@
 <script lang="ts">
 	import { invalidate } from '$app/navigation';
 	import { ApiError, describeFailure } from '#lib/api/api-error.js';
-	import type { HoldReason, WorkOrder, WorkOrderStatus } from '#lib/api/types.js';
+	import type { CurrentUser, HoldReason, WorkOrder, WorkOrderStatus } from '#lib/api/types.js';
 	import {
 		cancelWorkOrder,
 		collectWorkOrder,
@@ -22,9 +22,9 @@
 	import ActionDialog from '#lib/components/ActionDialog.svelte';
 	import { formatCents } from '#lib/money.js';
 	import { holdReasonLabels, statusLabels } from '#lib/work-orders/labels.js';
-	import { isClosed } from '#lib/work-orders/status.js';
+	import { canChange } from '#lib/work-orders/status.js';
 
-	let { workOrder, isOwner }: { workOrder: WorkOrder; isOwner: boolean } = $props();
+	let { workOrder, currentUser }: { workOrder: WorkOrder; currentUser: CurrentUser } = $props();
 
 	type StatusAction = 'start' | 'hold' | 'markReady' | 'collect' | 'cancel' | 'reopen';
 	type DialogAction = 'hold' | 'collect' | 'cancel' | 'reopen';
@@ -152,7 +152,7 @@
 			Cancel job
 		</button>
 	{/if}
-	{#if canDo('reopen') && isOwner}
+	{#if canDo('reopen') && canChange(workOrder, currentUser)}
 		<button
 			type="button"
 			disabled={busy}
@@ -164,7 +164,7 @@
 	{/if}
 </div>
 
-{#if isClosed(workOrder) && !isOwner}
+{#if !canChange(workOrder, currentUser)}
 	<p class="mt-2 text-sm text-slate-600">
 		Collected and cancelled jobs can only be changed by the owner.
 	</p>

@@ -1,4 +1,4 @@
-import { getJson, postJson, type Fetch } from './client';
+import { getJson, postJson, putJson, type Fetch } from './client';
 import type { HoldReason, WorkOrder, WorkOrderDetails } from './types';
 
 /** Every job not yet collected or cancelled, soonest promised first. */
@@ -12,6 +12,14 @@ export function getWorkOrder(fetch: Fetch, id: number): Promise<WorkOrder> {
 
 export function checkIn(fetch: Fetch, details: WorkOrderDetails): Promise<WorkOrder> {
 	return postJson<WorkOrder>(fetch, '/api/work-orders', details);
+}
+
+export function updateWorkOrderDetails(
+	fetch: Fetch,
+	id: number,
+	details: WorkOrderDetails
+): Promise<WorkOrder> {
+	return putJson<WorkOrder>(fetch, `/api/work-orders/${id}`, details);
 }
 
 // Status changes. Each returns the job as it is after the change.
