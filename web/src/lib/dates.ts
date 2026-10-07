@@ -1,5 +1,6 @@
 // The API sends calendar dates, such as a promised date, as "yyyy-mm-dd" with no time or
-// time zone. The shop's time zone is the browser's.
+// time zone, and timestamps in UTC. Timestamps are shown, and today is worked out, in the
+// browser's time zone, which is the shop's.
 
 export function todayAsIsoDate(): string {
 	const now = new Date();
@@ -17,4 +18,25 @@ export function formatShortDate(isoDate: string): string {
 		day: 'numeric',
 		month: 'short'
 	});
+}
+
+/** "Tue 6 Oct, 19:42" in Ontario for a UTC timestamp such as "2026-10-06T23:42:12Z". */
+export function formatDateTime(utcTimestamp: string): string {
+	return new Date(utcTimestamp).toLocaleString('en-GB', {
+		weekday: 'short',
+		day: 'numeric',
+		month: 'short',
+		hour: '2-digit',
+		minute: '2-digit'
+	});
+}
+
+/** "1 h 15 min" for 75 minutes. */
+export function formatDuration(minutes: number): string {
+	const hours = Math.floor(minutes / 60);
+	const remainingMinutes = minutes % 60;
+	if (hours === 0) {
+		return `${remainingMinutes} min`;
+	}
+	return remainingMinutes === 0 ? `${hours} h` : `${hours} h ${remainingMinutes} min`;
 }

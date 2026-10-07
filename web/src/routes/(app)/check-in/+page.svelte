@@ -63,9 +63,15 @@
 			>
 				Check in another bike
 			</button>
-			<a href="/" class="text-slate-700 underline hover:text-slate-900"
-				>Back to the job board</a
+			<a
+				href="/work-orders/{checkedInWorkOrder.id}"
+				class="text-slate-700 underline hover:text-slate-900"
 			>
+				Open job #{checkedInWorkOrder.id}
+			</a>
+			<a href="/" class="text-slate-700 underline hover:text-slate-900">
+				Back to the job board
+			</a>
 		</div>
 	</div>
 {:else}

@@ -2,12 +2,15 @@
 	The job board, at /. It lists every open job, soonest promised first, so the counter and
 	the bench can see what's in the shop. +page.ts loads the jobs and the staff list before
 	the page is drawn. The status tabs, the search box and "Assigned to me" all filter that
-	list in the browser, so they don't call the API again.
+	list in the browser, so they don't call the API again. Clicking a row opens the job.
 -->
 <script lang="ts">
+	import { goto, snapshot } from '$app/navigation';
 	import type { WorkOrder } from '#lib/api/types.js';
+	import Badge from '#lib/components/Badge.svelte';
 	import { formatShortDate, todayAsIsoDate } from '#lib/dates.js';
 	import { toPhoneDigits } from '#lib/phone-numbers.js';
+	import { displayNameOf } from '#lib/user-names.js';
 	import { holdReasonLabels, jobTypeLabels, statusLabels } from '#lib/work-orders/labels.js';
 	import { isOverdue } from '#lib/work-orders/overdue.js';
 	import type { PageProps } from './$types';
@@ -29,12 +32,20 @@
 	let search = $state('');
 	let assignedToMeOnly = $state(false);
 
+	// Puts the filters back when the browser's Back button returns here from a job.
+	snapshot({
+		capture: () => ({ selectedTab, search, assignedToMeOnly }),
+		restore: (filters) => {
+			selectedTab = filters.selectedTab;
+			search = filters.search;
+			assignedToMeOnly = filters.assignedToMeOnly;
+		}
+	});
+
 	const today = todayAsIsoDate();
 
-	// $derived values are worked out again whenever anything they read changes.
-	let userNames = $derived(new Map(data.users.map((user) => [user.id, user.displayName])));
-
-	// The tab counts come from this list, so each count matches what its tab would show.
+	// $derived values are worked out again whenever anything they read changes. The tab counts
+	// come from this list, so each count matches what its tab would show.
 	let matchingWorkOrders = $derived(
 		data.workOrders.filter(
 			(workOrder) => matchesSearch(workOrder) && (!assignedToMeOnly || isMine(workOrder))
@@ -80,17 +91,18 @@
 		return tab === 'AllOpen' ? 'All open' : statusLabels[tab];
 	}
 
-	function assigneeName(userId: number): string {
-		return userNames.get(userId) ?? 'Unknown user';
+	// Leaves a click on the job number to its own link, so the job isn't opened twice. Ignores a
+	// click that selected text, such as copying a phone number, or that held Ctrl, Cmd or Shift.
+	function openJob(event: MouseEvent, workOrder: WorkOrder) {
+		const clickedLink = event.target instanceof Element && event.target.closest('a') !== null;
+		const selectedText = (window.getSelection()?.toString() ?? '') !== '';
+		const modifierHeld = event.ctrlKey || event.metaKey || event.shiftKey;
+		if (clickedLink || selectedText || modifierHeld) {
+			return;
+		}
+		goto(`/work-orders/${workOrder.id}`);
 	}
 </script>
-
-<!-- A snippet is a reusable piece of markup inside this file, drawn with {@render badge(...)}. -->
-{#snippet badge(text: string, colours: string)}
-	<span class="inline-flex rounded-full px-2 py-0.5 text-xs font-medium {colours}">
-		{text}
-	</span>
-{/snippet}
 
 <svelte:head>
 	<title>Job board · Bike Shop Service Desk</title>
@@ -162,8 +174,21 @@
 			<tbody class="divide-y divide-slate-100">
 				<!-- (workOrder.id) is the key Svelte uses to match rows when the list changes. -->
 				{#each visibleWorkOrders as workOrder (workOrder.id)}
-					<tr class="align-top">
-						<td class="px-4 py-3 font-medium text-slate-900">#{workOrder.id}</td>
+					<!-- The whole row opens the job for mouse users. Keyboard and screen reader users get the
+						job number, which is a real link. -->
+					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
+					<tr
+						onclick={(event) => openJob(event, workOrder)}
+						class="cursor-pointer align-top hover:bg-slate-50"
+					>
+						<td class="px-4 py-3">
+							<a
+								href="/work-orders/{workOrder.id}"
+								class="font-medium text-slate-900 underline-offset-2 hover:underline"
+							>
+								#{workOrder.id}
+							</a>
+						</td>
 						<td class="px-4 py-3">
 							<div class="text-slate-900">{workOrder.customerName}</div>
 							<div class="text-slate-500">{workOrder.customerPhone}</div>
@@ -177,7 +202,7 @@
 							<div class="flex items-center gap-2 text-slate-900">
 								{statusLabels[workOrder.status]}
 								{#if workOrder.isOverEstimate}
-									{@render badge('Over estimate', 'bg-amber-100 text-amber-800')}
+									<Badge text="Over estimate" tone="warning" />
 								{/if}
 							</div>
 							{#if workOrder.holdReason}
@@ -190,15 +215,15 @@
 							<div class="flex items-center gap-2 whitespace-nowrap">
 								{formatShortDate(workOrder.promisedOn)}
 								{#if isOverdue(workOrder, today)}
-									{@render badge('Overdue', 'bg-red-100 text-red-800')}
+									<Badge text="Overdue" tone="alert" />
 								{/if}
 							</div>
 						</td>
 						<td class="px-4 py-3 text-slate-700">
 							{#if workOrder.assignedToUserId === null}
-								{@render badge('Unassigned', 'bg-amber-100 text-amber-800')}
+								<Badge text="Unassigned" tone="warning" />
 							{:else}
-								{assigneeName(workOrder.assignedToUserId)}
+								{displayNameOf(data.users, workOrder.assignedToUserId)}
 							{/if}
 						</td>
 					</tr>
