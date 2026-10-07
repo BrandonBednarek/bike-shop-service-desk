@@ -1,7 +1,8 @@
 <!--
 	A job's page, at /work-orders/1001. +page.ts loads the job and the staff list before the page
-	is drawn. It shows the job's details, the estimate against the bill, and the labour, parts
-	and notes recorded on it. An unknown job number goes to the error page instead.
+	is drawn. It shows the job's details with buttons to change its status (StatusActions), the
+	estimate against the bill, and the labour, parts and notes recorded on it. An unknown job
+	number goes to the error page instead.
 -->
 <script lang="ts">
 	import Badge from '#lib/components/Badge.svelte';
@@ -14,6 +15,7 @@
 	import LabourSection from './LabourSection.svelte';
 	import NotesSection from './NotesSection.svelte';
 	import PartsSection from './PartsSection.svelte';
+	import StatusActions from './StatusActions.svelte';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -50,6 +52,8 @@
 	</span>
 </div>
 <p class="mt-1 text-slate-600">{workOrder.customerName} · {workOrder.customerPhone}</p>
+
+<StatusActions {workOrder} isOwner={data.currentUser.role === 'Owner'} />
 
 <dl
 	class="mt-6 grid grid-cols-3 gap-x-8 gap-y-4 rounded-lg border border-slate-200 bg-white p-6 text-sm"

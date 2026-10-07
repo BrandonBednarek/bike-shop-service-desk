@@ -4,8 +4,10 @@ import { getWorkOrder } from '#lib/api/work-orders.js';
 import type { PageLoad } from './$types';
 
 // The staff list turns the user IDs on the job into names. A job number that isn't digits gets
-// the same 404 as an unknown one, without calling the API.
-export const load: PageLoad = async ({ params, fetch }) => {
+// the same 404 as an unknown one, without calling the API. A change to the job calls
+// invalidate('app:work-orders'), which runs this again.
+export const load: PageLoad = async ({ params, fetch, depends }) => {
+	depends('app:work-orders');
 	if (!/^\d+$/.test(params.id)) {
 		error(404, "There's no job with that number.");
 	}
