@@ -6,7 +6,7 @@
 -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
-	import { ApiError } from '#lib/api/api-error.js';
+	import { describeFailure } from '#lib/api/api-error.js';
 	import { signIn } from '#lib/api/auth.js';
 
 	// Kept in step with the two inputs below through bind:value.
@@ -25,17 +25,10 @@
 			await signIn(fetch, { username, password });
 			await goto('/');
 		} catch (error) {
-			errorMessage = describeSignInError(error);
+			errorMessage = describeFailure(error);
 		} finally {
 			submitting = false;
 		}
-	}
-
-	// Anything other than an ApiError means the request never got an answer from the API.
-	function describeSignInError(error: unknown): string {
-		return error instanceof ApiError
-			? error.userMessage
-			: "Couldn't reach the server. Check the connection and try again.";
 	}
 </script>
 

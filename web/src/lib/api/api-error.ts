@@ -30,6 +30,13 @@ export class ApiError extends Error {
 	}
 }
 
+/** What to tell the user when an API call fails, including when no answer came back at all. */
+export function describeFailure(error: unknown): string {
+	return error instanceof ApiError
+		? error.userMessage
+		: "Couldn't reach the server. Check the connection and try again.";
+}
+
 async function readProblem(response: Response): Promise<ProblemDetails> {
 	try {
 		return (await response.json()) as ProblemDetails;
