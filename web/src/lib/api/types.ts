@@ -12,6 +12,19 @@ export interface Credentials {
 	password: string;
 }
 
+export interface Customer {
+	id: number;
+	name: string;
+	phone: string;
+	email: string | null;
+}
+
+export interface NewCustomer {
+	name: string;
+	phone: string;
+	email: string | null;
+}
+
 export interface User {
 	id: number;
 	displayName: string;
@@ -34,6 +47,20 @@ export type JobType =
 	| 'Other';
 
 export type HoldReason = 'WaitingForParts' | 'WaitingForCustomer';
+
+/** What staff fill in when they check a bike in. Money is in cents. */
+export interface WorkOrderDetails {
+	customerId: number;
+	bikeMakeModel: string;
+	bikeColour: string;
+	jobType: JobType;
+	workRequested: string;
+	estimatedLabourMinutes: number;
+	labourRateCentsPerHour: number;
+	estimatedPartsCents: number;
+	promisedOn: string;
+	assignedToUserId: number | null;
+}
 
 /** Money is in cents, promisedOn is a "yyyy-mm-dd" date, and fields ending AtUtc are UTC timestamps. */
 export interface WorkOrder {

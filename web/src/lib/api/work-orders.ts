@@ -1,7 +1,11 @@
-import { getJson, type Fetch } from './client';
-import type { WorkOrder } from './types';
+import { getJson, postJson, type Fetch } from './client';
+import type { WorkOrder, WorkOrderDetails } from './types';
 
 /** Every job not yet collected or cancelled, soonest promised first. */
 export function listOpenWorkOrders(fetch: Fetch): Promise<WorkOrder[]> {
 	return getJson<WorkOrder[]>(fetch, '/api/work-orders');
+}
+
+export function checkIn(fetch: Fetch, details: WorkOrderDetails): Promise<WorkOrder> {
+	return postJson<WorkOrder>(fetch, '/api/work-orders', details);
 }

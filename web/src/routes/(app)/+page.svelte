@@ -96,7 +96,15 @@
 	<title>Job board · Bike Shop Service Desk</title>
 </svelte:head>
 
-<h1 class="text-2xl font-semibold text-slate-900">Job board</h1>
+<div class="flex items-center justify-between">
+	<h1 class="text-2xl font-semibold text-slate-900">Job board</h1>
+	<a
+		href="/check-in"
+		class="rounded-md bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800"
+	>
+		Check in a bike
+	</a>
+</div>
 
 <div class="mt-6 flex flex-wrap items-center gap-4">
 	<div class="flex gap-1 rounded-lg bg-slate-200/70 p-1" role="group" aria-label="Status">
