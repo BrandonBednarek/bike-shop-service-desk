@@ -32,6 +32,10 @@
 	}
 </script>
 
+<svelte:head>
+	<title>Sign in · Bike Shop Service Desk</title>
+</svelte:head>
+
 <main class="flex min-h-screen items-center justify-center bg-slate-50 px-4">
 	<div class="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
 		<h1 class="text-xl font-semibold text-slate-900">Bike Shop Service Desk</h1>

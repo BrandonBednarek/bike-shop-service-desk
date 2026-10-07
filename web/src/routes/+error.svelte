@@ -8,6 +8,10 @@
 	import { page } from '$app/state';
 </script>
 
+<svelte:head>
+	<title>Page couldn't be loaded · Bike Shop Service Desk</title>
+</svelte:head>
+
 <main class="flex min-h-screen items-center justify-center bg-slate-50 px-4">
 	<div role="alert" class="w-full max-w-md rounded-lg border border-red-200 bg-red-50 p-6">
 		<h1 class="text-lg font-semibold text-red-900">This page couldn't be loaded</h1>
