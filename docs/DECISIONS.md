@@ -6,7 +6,7 @@
 
 - **The brief:** a local bike shop says "we need an app for our shop", and the owner isn't available to answer questions.
 - **The problem I picked:** the repair side of the shop. I based this on a marine repair shop I worked at for several years as a teenager. Repairs there were tracked in a spreadsheet that only the owner updated. Nothing was badly broken, but it could have been organised much better, with fewer headaches and less of the owner's time.
-- **What I'm building:** Bike Shop Service Desk, an internal web app that tracks each repair from check-in to pickup, plus a dashboard for the owner.
+- **What I'm building:** Bike Shop Service Desk, an internal web app that tracks each repair from check-in to pickup, plus a dashboard of what's late and what's waiting to be picked up.
 - **Who uses it:** the owner (sees everything, manages staff accounts) and staff (check bikes in, do the work, hand them back).
 - **What I'm not building:** payments, invoicing, stock and anything customer-facing. The shop most likely has a POS for sales already (#2), so the app just records the POS receipt number when a bike is collected.
 - **Stack:** SvelteKit front end, ASP.NET Core 10 API, SQLite, all in one Docker image that starts with one command.
@@ -16,7 +16,7 @@
 | # | Assumption | Why | If it's wrong |
 |---|---|---|---|
 | 1 | A small single-location shop: the owner plus 1 to 3 staff, who all work both the counter and the workshop. | The brief says "local, independent" and the owner is busy, so it's most likely a small team where everyone does a bit of everything. | More staff or more locations would need separate counter and mechanic roles, and a location on each job. |
-| 2 | The shop already uses a POS for sales, card payments and tax, but it doesn't track repairs. | Almost every shop has one for sales. Most don't track repairs, which would explain why the owner asked for an app. | If their POS already tracks repairs, they may not need this app at all, or only the owner dashboard. |
+| 2 | The shop already uses a POS for sales, card payments and tax, but it doesn't track repairs. | Almost every shop has one for sales. Most don't track repairs, which would explain why the owner asked for an app. | If their POS already tracks repairs, they may not need this app at all, or only the dashboard. |
 | 3 | Repairs are tracked today with paper tags on the bikes, a spreadsheet and memory. | That's how the marine repair shop I worked at did it: the owner kept the spreadsheet and updated it all. | If repairs are already tracked in a spreadsheet, this will give a centralised system where they can easily track current repairs and find old ones when new work is needed to be done. |
 | 4 | Roughly 10 to 30 repair jobs a week, with a backlog in the spring. | That's about what a team that size can get through at an hour or two per job, and spring is the busy season. The marine shop I worked at had the same spring backlog. | If it's much busier, the job board would need paging and more filters to stay quick to use. |
 | 5 | Customers drop bikes off in person. There's no online booking. | Most small shops work walk-in or by phone. | Online booking would just be another way of creating jobs on top of this. |
@@ -25,7 +25,7 @@
 | 8 | Staff share two desktop PCs, one at the counter and one in the workshop. Everyone has their own account. | The shop probably has these PCs already, and personal accounts show who did what. Labour can be logged against any mechanic, whoever is signed in. | A shared tablet in the workshop would need a touch-friendly layout and quick user switching. |
 | 9 | Staff write the job number on the paper tag that goes on the bike. | Something physical on the bike has to point to its record. | Staff would have to find a bike's job by customer name and the bike's description, which is slower. |
 | 10 | One time zone (Eastern), prices in Canadian dollars, amounts before HST. | It's a local shop, and the POS adds tax at the till. | Other regions would need time zone and tax settings. |
-| 11 | Staff can see job prices. The dashboard (late jobs, time overruns) is for the owner only. | Staff talk prices with customers every day. The dashboard is for the owner to manage the shop, so staff don't need it. | Letting staff see it is a small change: allow staff on the dashboard's API and show them the link. |
+| 11 | Staff can see job prices and the dashboard (late jobs, bikes waiting to be picked up). | Staff talk prices with customers every day, and in a small shop everyone helps clear late jobs, so the whole team should see them. | If the owner wanted figures only they could see, such as profit, those would need their own API endpoint checked on the server, because the dashboard is built from data staff already have. |
 
 ## 2. Problem selection
 
@@ -52,7 +52,7 @@
 
 - It's the most valuable part of the shop that the POS doesn't already handle.
 - Everything else I'd add later (booking, notifications, a status page) needs a job record to exist first.
-- Counter staff, mechanics and the owner all work from the same job records. The job board shows mechanics what to do next, and the dashboard shows the owner what's late. When a customer calls to ask if their bike is ready, staff can look it up by phone number.
+- Counter staff, mechanics and the owner all work from the same job records. The job board shows mechanics what to do next, and the dashboard shows everyone what's late. When a customer calls to ask if their bike is ready, staff can look it up by phone number.
 - The dashboard only works if staff keep their jobs up to date, so checking a bike in and logging time need to be quick.
 
 Customers don't use the app themselves, but it still helps them. Staff get a warning when a bill goes over what the customer agreed to, so they can call and get approval before pickup. A status page for customers and "ready for pickup" messages are next steps.
@@ -75,7 +75,7 @@ Customers don't use the app themselves, but it still helps them. Staff get a war
 - **Work records:** labour time and parts used, a running bill, and a warning when the bill goes over the estimate. If the customer agrees to more work, staff revise the estimate.
 - **Linked jobs:** a new job can be linked to the same customer's earlier closed jobs, for example a comeback when our work needs redoing, or finishing work that was left undone.
 - **Closed jobs:** collecting a bike needs the POS receipt number and cancelling a job needs a reason, each confirmed in a dialog, so one stray click can't close a job. Staff can't change collected or cancelled jobs. The owner can correct them, or reopen one closed by mistake; a comeback still becomes a new linked job.
-- **Owner dashboard:** bikes in the shop, overdue jobs, jobs stuck on hold, bikes waiting to be picked up, and estimated vs actual hours.
+- **Dashboard:** bikes in the shop, overdue jobs grouped by status, and bikes waiting to be picked up with the money still to be paid.
 
 ### If there's time, in this order
 
@@ -85,8 +85,9 @@ Customers don't use the app themselves, but it still helps them. Staff get a war
 4. A history on each job, including notes like "called, left voicemail".
 5. A browser test of the main flow.
 6. Stopping two people from overwriting each other's changes on the same form.
-7. Comebacks on the owner dashboard.
+7. Comebacks on the dashboard.
 8. Generating the front end's API types from the back end instead of writing them by hand.
+9. Jobs stuck on hold, and estimated vs actual hours, on the dashboard.
 
 ### Only if everything above is done
 
@@ -133,7 +134,7 @@ Things I chose not to use: a repository layer on top of EF Core (its DbContext a
 
 - **SQLite only allows one write at a time, on one machine.** A few staff saving forms won't come close to that limit. I'd switch to PostgreSQL if the app ever needed to run as more than one copy, for example a central server for several shops.
 - **Backups aren't automated.** Everything the app saves is in one data folder in a Docker volume. A backup is a copy of that folder, taken while the app is stopped.
-- **The dashboard is calculated in memory.** Fine for hundreds of open jobs. With far more, the calculations would move into database queries.
+- **The dashboard is worked out in the browser** from the open jobs the board already loads. That's fine for the few dozen bikes a shop has in at once. Showing history, such as labour overruns over the last month, or anything staff shouldn't see would move it to its own API endpoint, checked on the server.
 - **Jobs are linked by customer, not by bike.** There's no bike record yet, so if a bike changes owners its history doesn't follow it.
 - **Sign-in security is sized for one shop on its own network.**
   - A deactivated user can't sign in again, but a session they already have open lasts until it expires, at most 8 hours (a working day) after they signed in.

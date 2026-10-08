@@ -4,11 +4,17 @@
 -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
+	import { page } from '$app/state';
 	import { signOut } from '#lib/api/auth.js';
 	import type { LayoutProps } from './$types';
 
 	// data is what the guard returned; children is the page being shown.
 	let { data, children }: LayoutProps = $props();
+
+	const pages = [
+		{ href: '/', label: 'Job board' },
+		{ href: '/dashboard', label: 'Dashboard' }
+	];
 
 	// Set to true to show the "Couldn't sign out" message in the header.
 	let signOutFailed = $state(false);
@@ -27,7 +33,21 @@
 <div class="min-h-screen bg-slate-50">
 	<header class="border-b border-slate-200 bg-white">
 		<div class="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
-			<a href="/" class="font-semibold text-slate-900">Bike Shop Service Desk</a>
+			<div class="flex items-center gap-6">
+				<a href="/" class="font-semibold text-slate-900">Bike Shop Service Desk</a>
+				<!-- aria-current marks the page you're on. -->
+				<nav aria-label="Main" class="flex gap-4 text-sm">
+					{#each pages as navPage (navPage.href)}
+						<a
+							href={navPage.href}
+							aria-current={page.url.pathname === navPage.href ? 'page' : undefined}
+							class="font-medium text-slate-600 hover:text-slate-900 aria-[current=page]:text-slate-900 aria-[current=page]:underline"
+						>
+							{navPage.label}
+						</a>
+					{/each}
+				</nav>
+			</div>
 			<div class="flex items-center gap-4 text-sm">
 				{#if signOutFailed}
 					<span role="alert" class="text-red-700">Couldn't sign out. Try again.</span>
