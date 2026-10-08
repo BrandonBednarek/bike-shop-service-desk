@@ -101,6 +101,12 @@ export interface LabourEntry {
 	loggedAtUtc: string;
 }
 
+export interface NewPart {
+	description: string;
+	quantity: number;
+	unitPriceCents: number;
+}
+
 export interface PartLine {
 	id: number;
 	description: string;

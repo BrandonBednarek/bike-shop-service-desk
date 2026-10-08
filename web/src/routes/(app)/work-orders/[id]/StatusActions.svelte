@@ -1,15 +1,14 @@
 <!--
 	The buttons that move a job through its statuses. Which buttons show depends on the status,
-	following the same table as the API's WorkOrderStatusTransitions; the API still checks every
-	change. Starting work and marking a job ready happen straight away, because they're easy to
-	undo. Hold, Collect, Cancel and Reopen open a dialog first: Hold needs a reason, Collect the
-	POS receipt number and Cancel a reason, and asking first stops a misclick closing a job.
-	After any change, invalidate('app:work-orders') reloads this page and throws away any copy of
-	the job board loaded earlier, so the board loads fresh next time it's opened.
+	following the same table as the API's WorkOrderStatusTransitions (allowsAction); the API
+	still checks every change. Starting work and marking a job ready happen straight away,
+	because they're easy to undo. Hold, Collect, Cancel and Reopen open a dialog first: Hold
+	needs a reason, Collect the POS receipt number and Cancel a reason, and asking first stops a
+	misclick closing a job. After any change, changeWorkOrder reloads the job so the page shows
+	its new status.
 -->
 <script lang="ts">
-	import { invalidate } from '$app/navigation';
-	import { ApiError, describeFailure } from '#lib/api/api-error.js';
+	import { describeFailure } from '#lib/api/api-error.js';
 	import type { CurrentUser, HoldReason, WorkOrder, WorkOrderStatus } from '#lib/api/types.js';
 	import {
 		cancelWorkOrder,
@@ -22,21 +21,12 @@
 	import ActionDialog from '#lib/components/ActionDialog.svelte';
 	import { formatCents } from '#lib/money.js';
 	import { holdReasonLabels, statusLabels } from '#lib/work-orders/labels.js';
-	import { canChange } from '#lib/work-orders/status.js';
+	import { changeWorkOrder } from '#lib/work-orders/change.js';
+	import { allowsAction, canChange } from '#lib/work-orders/status.js';
 
 	let { workOrder, currentUser }: { workOrder: WorkOrder; currentUser: CurrentUser } = $props();
 
-	type StatusAction = 'start' | 'hold' | 'markReady' | 'collect' | 'cancel' | 'reopen';
 	type DialogAction = 'hold' | 'collect' | 'cancel' | 'reopen';
-
-	const actionsByStatus: Record<WorkOrderStatus, StatusAction[]> = {
-		CheckedIn: ['start', 'hold', 'cancel'],
-		InProgress: ['markReady', 'hold', 'cancel'],
-		OnHold: ['start', 'markReady', 'cancel'],
-		ReadyForPickup: ['collect', 'start'],
-		Collected: ['reopen'],
-		Cancelled: ['reopen']
-	};
 
 	// "Start" means something different depending on where the job is coming from.
 	const startLabels: Partial<Record<WorkOrderStatus, string>> = {
@@ -47,7 +37,6 @@
 
 	const holdReasons = Object.keys(holdReasonLabels) as HoldReason[];
 
-	let availableActions = $derived(actionsByStatus[workOrder.status]);
 	let openDialog = $state<DialogAction | null>(null);
 
 	// The dialogs' fields, cleared each time a dialog opens.
@@ -59,10 +48,6 @@
 	let errorMessage = $state('');
 	let busy = $state(false);
 
-	function canDo(action: StatusAction): boolean {
-		return availableActions.includes(action);
-	}
-
 	function showDialog(action: DialogAction) {
 		holdReason = 'WaitingForParts';
 		holdNote = '';
@@ -72,27 +57,12 @@
 		openDialog = action;
 	}
 
-	// Makes the change, then reloads the job so the page shows its new status.
-	async function change(callApi: () => Promise<WorkOrder>) {
-		try {
-			await callApi();
-		} catch (error) {
-			// The API refused, perhaps because someone else changed the job first, so reload it to show
-			// its real status next to the message. A failed connection would fail the reload too.
-			if (error instanceof ApiError) {
-				await invalidate('app:work-orders');
-			}
-			throw error;
-		}
-		await invalidate('app:work-orders');
-	}
-
 	// For the buttons without a dialog: shows the API's message here if the change fails.
 	async function changeNow(callApi: () => Promise<WorkOrder>) {
 		busy = true;
 		errorMessage = '';
 		try {
-			await change(callApi);
+			await changeWorkOrder(callApi);
 		} catch (error) {
 			errorMessage = describeFailure(error);
 		} finally {
@@ -102,7 +72,7 @@
 </script>
 
 <div class="mt-4 flex flex-wrap items-center gap-2 text-sm font-medium">
-	{#if canDo('collect')}
+	{#if allowsAction(workOrder, 'collect')}
 		<button
 			type="button"
 			disabled={busy}
@@ -112,7 +82,7 @@
 			Mark collected
 		</button>
 	{/if}
-	{#if canDo('start')}
+	{#if allowsAction(workOrder, 'start')}
 		<button
 			type="button"
 			disabled={busy}
@@ -122,7 +92,7 @@
 			{startLabels[workOrder.status]}
 		</button>
 	{/if}
-	{#if canDo('markReady')}
+	{#if allowsAction(workOrder, 'markReady')}
 		<button
 			type="button"
 			disabled={busy}
@@ -132,7 +102,7 @@
 			Mark ready for pickup
 		</button>
 	{/if}
-	{#if canDo('hold')}
+	{#if allowsAction(workOrder, 'hold')}
 		<button
 			type="button"
 			disabled={busy}
@@ -142,7 +112,7 @@
 			Put on hold
 		</button>
 	{/if}
-	{#if canDo('cancel')}
+	{#if allowsAction(workOrder, 'cancel')}
 		<button
 			type="button"
 			disabled={busy}
@@ -152,7 +122,7 @@
 			Cancel job
 		</button>
 	{/if}
-	{#if canDo('reopen') && canChange(workOrder, currentUser)}
+	{#if allowsAction(workOrder, 'reopen') && canChange(workOrder, currentUser)}
 		<button
 			type="button"
 			disabled={busy}
@@ -181,7 +151,7 @@
 		title="Put job #{workOrder.id} on hold"
 		confirmLabel="Put on hold"
 		onconfirm={() =>
-			change(() =>
+			changeWorkOrder(() =>
 				holdWorkOrder(fetch, workOrder.id, {
 					reason: holdReason,
 					note: holdNote.trim() || null
@@ -214,7 +184,7 @@
 		title="Mark job #{workOrder.id} collected"
 		confirmLabel="Mark collected"
 		onconfirm={() =>
-			change(() => collectWorkOrder(fetch, workOrder.id, posReceiptNumber.trim()))}
+			changeWorkOrder(() => collectWorkOrder(fetch, workOrder.id, posReceiptNumber.trim()))}
 		onclose={() => (openDialog = null)}
 	>
 		<p>
@@ -237,7 +207,7 @@
 		confirmLabel="Cancel job"
 		danger
 		onconfirm={() =>
-			change(() => cancelWorkOrder(fetch, workOrder.id, cancellationReason.trim()))}
+			changeWorkOrder(() => cancelWorkOrder(fetch, workOrder.id, cancellationReason.trim()))}
 		onclose={() => (openDialog = null)}
 	>
 		<label class="block font-medium text-slate-700">
@@ -254,7 +224,7 @@
 	<ActionDialog
 		title="Reopen job #{workOrder.id}"
 		confirmLabel="Reopen job"
-		onconfirm={() => change(() => reopenWorkOrder(fetch, workOrder.id))}
+		onconfirm={() => changeWorkOrder(() => reopenWorkOrder(fetch, workOrder.id))}
 		onclose={() => (openDialog = null)}
 	>
 		{#if workOrder.status === 'Collected'}

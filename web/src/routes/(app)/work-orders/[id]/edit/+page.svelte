@@ -8,8 +8,9 @@
 	import { goto, invalidate } from '$app/navigation';
 	import type { WorkOrderDetails } from '#lib/api/types.js';
 	import { updateWorkOrderDetails } from '#lib/api/work-orders.js';
+	import PosSaleReminder from '#lib/components/PosSaleReminder.svelte';
 	import WorkOrderForm from '#lib/components/WorkOrderForm.svelte';
-	import { canChange, isClosed } from '#lib/work-orders/status.js';
+	import { canChange } from '#lib/work-orders/status.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
@@ -39,12 +40,7 @@
 		Collected and cancelled jobs can only be changed by the owner.
 	</p>
 {:else}
-	{#if isClosed(workOrder)}
-		<p class="mt-6 max-w-3xl rounded-md bg-amber-50 px-3 py-2 text-sm text-amber-900">
-			This job is closed. Changes here don't update the POS sale, so adjust the till
-			separately.
-		</p>
-	{/if}
+	<PosSaleReminder {workOrder} />
 	<!-- A WorkOrder has every field WorkOrderDetails needs, so the job itself can be the form's
 		starting values. SvelteKit reuses this page when the address moves to another job's edit
 		page, so {#key} gives each job a fresh form instead of one still holding the last job. -->

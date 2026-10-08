@@ -17,6 +17,10 @@ export function putJson<T>(fetch: Fetch, path: string, body: unknown): Promise<T
 	return send<T>(fetch, path, withJsonBody('PUT', body));
 }
 
+export function deleteJson<T>(fetch: Fetch, path: string): Promise<T> {
+	return send<T>(fetch, path, { method: 'DELETE' });
+}
+
 function withJsonBody(method: string, body: unknown): RequestInit {
 	return {
 		method,

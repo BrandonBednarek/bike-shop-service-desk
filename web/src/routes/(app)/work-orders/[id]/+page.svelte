@@ -6,6 +6,7 @@
 -->
 <script lang="ts">
 	import Badge from '#lib/components/Badge.svelte';
+	import PosSaleReminder from '#lib/components/PosSaleReminder.svelte';
 	import { formatDateTime, formatDuration, formatShortDate, todayAsIsoDate } from '#lib/dates.js';
 	import { formatCents } from '#lib/money.js';
 	import { displayNameOf } from '#lib/user-names.js';
@@ -62,6 +63,10 @@
 <p class="mt-1 text-slate-600">{workOrder.customerName} · {workOrder.customerPhone}</p>
 
 <StatusActions {workOrder} currentUser={data.currentUser} />
+
+{#if canChange(workOrder, data.currentUser)}
+	<PosSaleReminder {workOrder} />
+{/if}
 
 <dl
 	class="mt-6 grid grid-cols-3 gap-x-8 gap-y-4 rounded-lg border border-slate-200 bg-white p-6 text-sm"
@@ -176,6 +181,6 @@
 	</p>
 </section>
 
-<LabourSection entries={workOrder.labourEntries} users={data.users} />
-<PartsSection partLines={workOrder.partLines} />
-<NotesSection notes={workOrder.notes} users={data.users} />
+<LabourSection {workOrder} users={data.users} currentUser={data.currentUser} />
+<PartsSection {workOrder} currentUser={data.currentUser} />
+<NotesSection {workOrder} users={data.users} currentUser={data.currentUser} />

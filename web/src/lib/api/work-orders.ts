@@ -1,5 +1,5 @@
-import { getJson, postJson, putJson, type Fetch } from './client';
-import type { HoldReason, WorkOrder, WorkOrderDetails } from './types';
+import { deleteJson, getJson, postJson, putJson, type Fetch } from './client';
+import type { HoldReason, NewPart, WorkOrder, WorkOrderDetails } from './types';
 
 /** Every job not yet collected or cancelled, soonest promised first. */
 export function listOpenWorkOrders(fetch: Fetch): Promise<WorkOrder[]> {
@@ -54,4 +54,30 @@ export function cancelWorkOrder(fetch: Fetch, id: number, reason: string): Promi
 
 export function reopenWorkOrder(fetch: Fetch, id: number): Promise<WorkOrder> {
 	return postJson<WorkOrder>(fetch, `/api/work-orders/${id}/reopen`);
+}
+
+// Labour, parts and notes. Each returns the job as it is after the change.
+
+export function logLabour(
+	fetch: Fetch,
+	id: number,
+	labour: { mechanicUserId: number | null; minutes: number; note: string | null }
+): Promise<WorkOrder> {
+	return postJson<WorkOrder>(fetch, `/api/work-orders/${id}/labour`, labour);
+}
+
+export function removeLabour(fetch: Fetch, id: number, entryId: number): Promise<WorkOrder> {
+	return deleteJson<WorkOrder>(fetch, `/api/work-orders/${id}/labour/${entryId}`);
+}
+
+export function addPart(fetch: Fetch, id: number, part: NewPart): Promise<WorkOrder> {
+	return postJson<WorkOrder>(fetch, `/api/work-orders/${id}/parts`, part);
+}
+
+export function removePart(fetch: Fetch, id: number, partId: number): Promise<WorkOrder> {
+	return deleteJson<WorkOrder>(fetch, `/api/work-orders/${id}/parts/${partId}`);
+}
+
+export function addNote(fetch: Fetch, id: number, text: string): Promise<WorkOrder> {
+	return postJson<WorkOrder>(fetch, `/api/work-orders/${id}/notes`, { text });
 }
