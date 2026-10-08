@@ -10,11 +10,23 @@ export function getJson<T>(fetch: Fetch, path: string): Promise<T> {
 }
 
 export function postJson<T>(fetch: Fetch, path: string, body?: unknown): Promise<T> {
-	return send<T>(fetch, path, {
-		method: 'POST',
+	return send<T>(fetch, path, withJsonBody('POST', body));
+}
+
+export function putJson<T>(fetch: Fetch, path: string, body: unknown): Promise<T> {
+	return send<T>(fetch, path, withJsonBody('PUT', body));
+}
+
+export function deleteJson<T>(fetch: Fetch, path: string): Promise<T> {
+	return send<T>(fetch, path, { method: 'DELETE' });
+}
+
+function withJsonBody(method: string, body: unknown): RequestInit {
+	return {
+		method,
 		headers: { 'Content-Type': 'application/json' },
 		body: body === undefined ? undefined : JSON.stringify(body)
-	});
+	};
 }
 
 async function send<T>(fetch: Fetch, path: string, init: RequestInit): Promise<T> {
