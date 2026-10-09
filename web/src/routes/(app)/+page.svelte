@@ -5,18 +5,22 @@
 	list in the browser, so they don't call the API again. Clicking a row opens the job.
 -->
 <script lang="ts">
-	import { goto, snapshot } from '$app/navigation';
 	import type { WorkOrder } from '#lib/api/types.js';
 	import Badge from '#lib/components/Badge.svelte';
 	import { formatShortDate, todayAsIsoDate } from '#lib/dates.js';
 	import { toPhoneDigits } from '#lib/phone-numbers.js';
 	import { displayNameOf } from '#lib/user-names.js';
 	import { holdReasonLabels, jobTypeLabels, statusLabels } from '#lib/work-orders/labels.js';
+	import { jobBoardPage, rememberListPage } from '#lib/work-orders/list-pages.js';
+	import { openJobFromRow } from '#lib/work-orders/open-job.js';
 	import { isOverdue } from '#lib/work-orders/overdue.js';
+	import { snapshot } from '$app/navigation';
 	import type { PageProps } from './$types';
 
 	// data is what +page.ts returned, plus currentUser from the (app) layout's guard.
 	let { data }: PageProps = $props();
+
+	rememberListPage(jobBoardPage);
 
 	type StatusTab = 'AllOpen' | 'CheckedIn' | 'InProgress' | 'OnHold' | 'ReadyForPickup';
 	const statusTabs: StatusTab[] = [
@@ -89,18 +93,6 @@
 
 	function tabLabel(tab: StatusTab): string {
 		return tab === 'AllOpen' ? 'All open' : statusLabels[tab];
-	}
-
-	// Leaves a click on the job number to its own link, so the job isn't opened twice. Ignores a
-	// click that selected text, such as copying a phone number, or that held Ctrl, Cmd or Shift.
-	function openJob(event: MouseEvent, workOrder: WorkOrder) {
-		const clickedLink = event.target instanceof Element && event.target.closest('a') !== null;
-		const selectedText = (window.getSelection()?.toString() ?? '') !== '';
-		const modifierHeld = event.ctrlKey || event.metaKey || event.shiftKey;
-		if (clickedLink || selectedText || modifierHeld) {
-			return;
-		}
-		goto(`/work-orders/${workOrder.id}`);
 	}
 </script>
 
@@ -176,9 +168,8 @@
 				{#each visibleWorkOrders as workOrder (workOrder.id)}
 					<!-- The whole row opens the job for mouse users. Keyboard and screen reader users get the
 						job number, which is a real link. -->
-					<!-- svelte-ignore a11y_click_events_have_key_events, a11y_no_noninteractive_element_interactions -->
 					<tr
-						onclick={(event) => openJob(event, workOrder)}
+						onclick={(event) => openJobFromRow(event, workOrder.id)}
 						class="cursor-pointer align-top hover:bg-slate-50"
 					>
 						<td class="px-4 py-3">

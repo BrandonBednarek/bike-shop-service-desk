@@ -1,8 +1,10 @@
 <!--
 	The dashboard, at /dashboard: what's late, and what's finished but not paid for. Everyone
-	can see it. +page.ts loads the open jobs, and both tables are worked out here from that list: jobs past their promised date that aren't ready yet,
-	grouped by status and most overdue first (the order the API sends them), and bikes that are
-	ready but haven't been collected, longest waiting first.
+	can see it. +page.ts loads the open jobs, and both tables are worked out here from that list:
+	jobs past their promised date that aren't ready yet, grouped by status and most overdue first
+	(the order the API sends them), and bikes that are ready but haven't been collected, longest
+	waiting first. As on the job board, clicking a row opens the job, and keyboard and screen
+	reader users get the job number, which is a real link.
 -->
 <script lang="ts">
 	import type { WorkOrder, WorkOrderStatus } from '#lib/api/types.js';
@@ -17,10 +19,14 @@
 	import { formatCents } from '#lib/money.js';
 	import { displayNameOf } from '#lib/user-names.js';
 	import { holdReasonLabels, statusLabels } from '#lib/work-orders/labels.js';
+	import { dashboardPage, rememberListPage } from '#lib/work-orders/list-pages.js';
+	import { openJobFromRow } from '#lib/work-orders/open-job.js';
 	import { isOverdue, notReadyStatuses } from '#lib/work-orders/overdue.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+
+	rememberListPage(dashboardPage);
 
 	const today = todayAsIsoDate();
 
@@ -122,7 +128,10 @@
 								</th>
 							</tr>
 							{#each groupWorkOrders as workOrder (workOrder.id)}
-								<tr class="align-top">
+								<tr
+									onclick={(event) => openJobFromRow(event, workOrder.id)}
+									class="cursor-pointer align-top hover:bg-slate-50"
+								>
 									{@render jobCells(workOrder)}
 									<td class="px-4 py-3 whitespace-nowrap text-slate-700">
 										{formatShortDate(workOrder.promisedOn)}
@@ -173,7 +182,10 @@
 				</thead>
 				<tbody class="divide-y divide-slate-100">
 					{#each readyWorkOrders as workOrder (workOrder.id)}
-						<tr class="align-top">
+						<tr
+							onclick={(event) => openJobFromRow(event, workOrder.id)}
+							class="cursor-pointer align-top hover:bg-slate-50"
+						>
 							{@render jobCells(workOrder)}
 							<td class="px-4 py-3 whitespace-nowrap text-slate-700">
 								{formatDays(daysWaiting(workOrder))}

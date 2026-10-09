@@ -2,7 +2,8 @@
 	A job's page, at /work-orders/1001. The folder's +layout.ts loads the job and the staff list
 	before the page is drawn. It shows the job's details, an Edit details link, buttons to
 	change its status (StatusActions), the estimate against the bill, and the labour, parts and
-	notes recorded on it. An unknown job number goes to the error page instead.
+	notes recorded on it. An unknown job number goes to the error page instead. The link at the
+	top goes back to the job board or the dashboard, whichever was shown last in this tab.
 -->
 <script lang="ts">
 	import Badge from '#lib/components/Badge.svelte';
@@ -11,6 +12,7 @@
 	import { formatCents } from '#lib/money.js';
 	import { displayNameOf } from '#lib/user-names.js';
 	import { holdReasonLabels, jobTypeLabels, statusLabels } from '#lib/work-orders/labels.js';
+	import { listPageToReturnTo } from '#lib/work-orders/list-pages.js';
 	import { isOverdue } from '#lib/work-orders/overdue.js';
 	import { canChange, isClosed } from '#lib/work-orders/status.js';
 	import LabourSection from './LabourSection.svelte';
@@ -25,6 +27,7 @@
 	// changes, so data can change under it.
 	let workOrder = $derived(data.workOrder);
 	const today = todayAsIsoDate();
+	const returnTo = listPageToReturnTo();
 
 	// The API sends the estimate and bill totals; their labour and parts amounts are worked out
 	// from them, so they always add up.
@@ -44,7 +47,7 @@
 	<title>Job #{workOrder.id} · Bike Shop Service Desk</title>
 </svelte:head>
 
-<a href="/" class="text-sm text-slate-600 hover:text-slate-900">← Job board</a>
+<a href={returnTo.href} class="text-sm text-slate-600 hover:text-slate-900">← {returnTo.label}</a>
 
 <div class="mt-2 flex items-center gap-3">
 	<h1 class="text-2xl font-semibold text-slate-900">Job #{workOrder.id}</h1>
