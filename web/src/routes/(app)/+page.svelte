@@ -11,6 +11,7 @@
 	import { toPhoneDigits } from '#lib/phone-numbers.js';
 	import { displayNameOf } from '#lib/user-names.js';
 	import { holdReasonLabels, jobTypeLabels, statusLabels } from '#lib/work-orders/labels.js';
+	import { jobBoardPage, rememberListPage } from '#lib/work-orders/list-pages.js';
 	import { openJobFromRow } from '#lib/work-orders/open-job.js';
 	import { isOverdue } from '#lib/work-orders/overdue.js';
 	import { snapshot } from '$app/navigation';
@@ -18,6 +19,8 @@
 
 	// data is what +page.ts returned, plus currentUser from the (app) layout's guard.
 	let { data }: PageProps = $props();
+
+	rememberListPage(jobBoardPage);
 
 	type StatusTab = 'AllOpen' | 'CheckedIn' | 'InProgress' | 'OnHold' | 'ReadyForPickup';
 	const statusTabs: StatusTab[] = [

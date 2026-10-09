@@ -19,11 +19,14 @@
 	import { formatCents } from '#lib/money.js';
 	import { displayNameOf } from '#lib/user-names.js';
 	import { holdReasonLabels, statusLabels } from '#lib/work-orders/labels.js';
+	import { dashboardPage, rememberListPage } from '#lib/work-orders/list-pages.js';
 	import { openJobFromRow } from '#lib/work-orders/open-job.js';
 	import { isOverdue, notReadyStatuses } from '#lib/work-orders/overdue.js';
 	import type { PageProps } from './$types';
 
 	let { data }: PageProps = $props();
+
+	rememberListPage(dashboardPage);
 
 	const today = todayAsIsoDate();
 
