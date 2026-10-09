@@ -12,6 +12,13 @@ export interface Credentials {
 	password: string;
 }
 
+/** An account listed on the sign-in page, with its password. Only sent in demo mode. */
+export interface DemoAccount extends Credentials {
+	displayName: string;
+	role: UserRole;
+	isActive: boolean;
+}
+
 export interface Customer {
 	id: number;
 	name: string;

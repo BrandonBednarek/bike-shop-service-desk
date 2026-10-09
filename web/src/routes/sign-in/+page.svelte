@@ -2,12 +2,17 @@
 	The sign-in page, at /sign-in. It sits outside the (app) folder, so it has no header, and
 	+page.ts sends anyone already signed in to the job board. On success it goes to the job
 	board; on failure it shows the API's message, or a connection message when the API can't
-	be reached.
+	be reached. In demo mode the demo accounts are listed under the form.
 -->
 <script lang="ts">
 	import { goto } from '$app/navigation';
 	import { describeFailure } from '#lib/api/api-error.js';
 	import { signIn } from '#lib/api/auth.js';
+	import type { DemoAccount } from '#lib/api/types.js';
+	import DemoAccounts from './DemoAccounts.svelte';
+	import type { PageProps } from './$types';
+
+	let { data }: PageProps = $props();
 
 	// Kept in step with the two inputs below through bind:value.
 	let username = $state('');
@@ -19,6 +24,21 @@
 	async function handleSubmit(event: SubmitEvent) {
 		// Handle the form here instead of letting the browser post it and reload the page.
 		event.preventDefault();
+		await submitCredentials();
+	}
+
+	// Fills in the form first, so it's clear which account was used. The demo buttons stay
+	// enabled, so keyboard focus stays on them, and a click during a sign-in is ignored here.
+	async function signInAs(account: DemoAccount) {
+		if (submitting) {
+			return;
+		}
+		username = account.username;
+		password = account.password;
+		await submitCredentials();
+	}
+
+	async function submitCredentials() {
 		submitting = true;
 		errorMessage = '';
 		try {
@@ -36,7 +56,7 @@
 	<title>Sign in · Bike Shop Service Desk</title>
 </svelte:head>
 
-<main class="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+<main class="flex min-h-screen flex-col items-center justify-center gap-4 bg-slate-50 px-4 py-8">
 	<div class="w-full max-w-sm rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
 		<h1 class="text-xl font-semibold text-slate-900">Bike Shop Service Desk</h1>
 		<p class="mt-1 text-sm text-slate-600">Sign in to continue.</p>
@@ -86,4 +106,8 @@
 			</button>
 		</form>
 	</div>
+
+	{#if data.demoAccounts.length > 0}
+		<DemoAccounts accounts={data.demoAccounts} onchoose={signInAs} />
+	{/if}
 </main>
