@@ -9,6 +9,9 @@ services:
       - "${PORT:-8080}:8080"
     volumes:
       - bikeshop-data:/app/data
+    environment:
+      # Demo mode: sample jobs on first start, and the demo accounts on the sign-in page.
+      Demo__Enabled: "true"
 
 volumes:
   bikeshop-data:

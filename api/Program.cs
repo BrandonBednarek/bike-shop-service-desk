@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 using BikeShop.Api.Features.Auth;
 using BikeShop.Api.Features.Customers;
+using BikeShop.Api.Features.Demo;
 using BikeShop.Api.Features.Users;
 using BikeShop.Api.Features.WorkOrders;
 using BikeShop.Api.Infrastructure.Errors;
@@ -38,6 +39,7 @@ app.UseAuthorization();
 
 // Endpoints
 app.MapAuthEndpoints();
+app.MapDemoEndpoints();
 app.MapCustomerEndpoints();
 app.MapUserEndpoints();
 app.MapWorkOrderEndpoints();

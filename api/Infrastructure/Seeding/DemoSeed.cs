@@ -3,8 +3,9 @@ using BikeShop.Api.Domain.Users;
 namespace BikeShop.Api.Infrastructure.Seeding;
 
 /// <summary>
-/// The demo data a reviewer starts with. Demo only: a real shop would create its owner
-/// account on first run instead of shipping a known password.
+/// The accounts every new database starts with, all on one known password. They're seeded
+/// whether or not demo mode is on, since nobody could sign in otherwise. A real shop would
+/// create its owner account on first run instead of shipping a known password.
 /// </summary>
 public static class DemoSeed
 {
